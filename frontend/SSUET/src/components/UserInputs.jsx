@@ -11,9 +11,9 @@ const UserInputs = () => {
     const ageGroups = ['Under 18', '18-24', '25-34', '35-44', '45 onwards'];
     const genders = ['Male', 'Female'];
     return (
-        <div style={{ paddingLeft: '50px' }}>
+        <div>
             <div style={{ marginBottom: '50px' }}>
-                <h1>Inputs</h1>
+                <h1>Donate</h1>
             </div>
             <div style={{
                 padding: '20px',

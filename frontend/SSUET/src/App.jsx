@@ -2,11 +2,17 @@ import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import styled from "styled-components";
 import Header from "./components/Header"; 
+<<<<<<< HEAD
 import Deservinginfo from "./components/Deservinginfo"; 
 import Ngotable from "./components/Ngotable"; 
 import Status from "./components/Status"; 
 import Login from "./components/login";
 // import Landing from "./components/Landing"; 
+=======
+import User from "./components/User";
+import DonateMore from "./components/DonateMore";
+import BrandsPage from "./components/BrandsPage";
+>>>>>>> 96c2dd8071b15f4964278194e16938dc9ed75d9f
 
 const AppContainer = styled.div`
   display: flex;
@@ -21,12 +27,19 @@ const App = () => {
     <Router>
       <AppContainer>
         <Routes>
+<<<<<<< HEAD
         {/* <Route path="/" element={<Landing />} /> */}
           <Route path="/header" element={<Header />} />
           <Route path="/deserving" element={<Deservinginfo />} />
           <Route path="/ngotable" element={<Ngotable />} />
           <Route path="/status" element={<Status/>} />
           <Route path="/login" element={<Login/>} />
+=======
+          <Route path="/" element={<Header />} />
+          <Route path="/User" element={<User/>} />
+          <Route path="/donate-more" element={<DonateMore/>} />
+          <Route path="/Brands" element={<BrandsPage/>} />
+>>>>>>> 96c2dd8071b15f4964278194e16938dc9ed75d9f
           {/* Add more routes here */}
         </Routes>
       </AppContainer>

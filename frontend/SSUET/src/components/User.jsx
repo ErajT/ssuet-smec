@@ -1,12 +1,11 @@
-import React, { useState } from 'react';
+import React from 'react';
 import UserHistory from './UserHistory';
 import UserInputs from './UserInputs';
 
 const User = () => {
     return (
-        <div>
+        <div style={{ paddingLeft: '50px' }}>
             <UserHistory />
-            <UserInputs />
         </div>
     );
 };
