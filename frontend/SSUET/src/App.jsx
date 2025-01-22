@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import styled from "styled-components";
 import Header from "./components/Header"; 
 import User from "./components/User";
+import DonateMore from "./components/DonateMore";
 
 const AppContainer = styled.div`
   display: flex;
@@ -19,6 +20,7 @@ const App = () => {
         <Routes>
           <Route path="/" element={<Header />} />
           <Route path="/User" element={<User/>} />
+          <Route path="/donate-more" element={<DonateMore/>} />
           {/* Add more routes here */}
         </Routes>
       </AppContainer>
