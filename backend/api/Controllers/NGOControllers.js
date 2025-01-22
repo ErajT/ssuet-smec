@@ -225,6 +225,7 @@ exports.getDiscarded = async (req, res) => {
 // Function to summarize comments
 const aiSuggestions = async (clothName, material) => {
     try {
+        console.log("hello i am here")
 
         const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
             method: "POST",
