@@ -9,20 +9,17 @@ router.route('/addDeserving')
 router.route('/addDeservingBulk')
     .post(NGOHandler.addDeservingBulk);
 
-router.route('/getDeserving')
+router.route('/getDeserving/:ngoID')
     .get(NGOHandler.getDeserving);
 
-router.route('/getDonation')
+router.route('/getDonation/:ngoID/:brandID')
     .get(NGOHandler.getDonations);
 
-router.route('/getDonated')
+router.route('/getDonated/:ngoID/:brandID')
     .get(NGOHandler.getDonated);
 
 router.route('/getDiscarded')
     .get(NGOHandler.getDiscarded);
-
-router.route('/addDonation')
-    .post(NGOHandler.addDonation);
 
 router.route('/addDonated')
     .post(NGOHandler.addDonated);

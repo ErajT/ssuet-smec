@@ -30,7 +30,7 @@ exports.addDeserving = async (req, res) => {
 
 exports.addDeservingBulk = async (req, res) => {
     // Define the base SQL query for bulk insertion
-    const InsertSQL = "INSERT INTO deserving(name, ageGroup, gender, phoneNo) VALUES ?";
+    const InsertSQL = "INSERT INTO deserving(name, ageGroup, gender, phoneNo, ngoID) VALUES ?";
     
     try {
         // Extract the data to insert from the request body
@@ -41,7 +41,8 @@ exports.addDeservingBulk = async (req, res) => {
             record.name,
             record.ageGroup,
             record.gender,
-            record.phoneNo
+            record.phoneNo,
+            record.ngoID
         ]);
 
         // Execute the query with the array of values
@@ -65,10 +66,11 @@ exports.addDeservingBulk = async (req, res) => {
 };
 
 exports.getDeserving = async (req, res) => {
-    const GetSQL = "SELECT * FROM deserving";
+    const GetSQL = "SELECT * FROM deserving WHERE ngoID=?";
     
     try {
-        const result = await Qexecution.queryExecute(GetSQL, []);
+        const {ngoID} = req.params;
+        const result = await Qexecution.queryExecute(GetSQL, [ngoID]);
         
         res.status(200).send({
             status: "success",
@@ -86,10 +88,16 @@ exports.getDeserving = async (req, res) => {
 };
 
 exports.getDonations = async (req, res) => {
-    const GetSQL = "SELECT * FROM donation";
+    const GetSQL = `
+        SELECT donation.*, user.name AS userName
+        FROM donation
+        JOIN user ON donation.userID = user.userID 
+        WHERE ngoID=? AND brandID=?
+    `;
     
     try {
-        const result = await Qexecution.queryExecute(GetSQL, []);
+        const {ngoID, brandID} = req.params;
+        const result = await Qexecution.queryExecute(GetSQL, [ngoID, brandID]);
         
         res.status(200).send({
             status: "success",
@@ -106,16 +114,18 @@ exports.getDonations = async (req, res) => {
     }
 };
 
-
 exports.getDonated = async (req, res) => {
     const GetSQL = `
-        SELECT donated.*, donation.*
+        SELECT donated.*, users.name AS donatedBy, deserving.name AS donatedTo
         FROM donated
-        JOIN donation ON donated.donationID = donation.donationID
+        JOIN users ON donated.userID = users.userID
+        JOIN deserving ON donated.deservingID = deserving.deservingID
+        WHERE ngoID=? AND brandID=?
     `;
     
     try {
-        const result = await Qexecution.queryExecute(GetSQL, []);
+        const {ngoID, brandID} = req.params;
+        const result = await Qexecution.queryExecute(GetSQL, [ngoID, brandID]);
         
         res.status(200).send({
             status: "success",
@@ -133,7 +143,11 @@ exports.getDonated = async (req, res) => {
 };
 
 exports.getDiscarded = async (req, res) => {
-    const GetSQL = "SELECT * FROM discarded";
+    const GetSQL = `
+        SELECT discarded.*, users.name AS userName
+        FROM discarded
+        JOIN users ON discarded.userID = users.userID
+    `;
     
     try {
         const result = await Qexecution.queryExecute(GetSQL, []);
@@ -153,36 +167,15 @@ exports.getDiscarded = async (req, res) => {
     }
 };
 
-exports.addDonation = async (req, res) => {
-    const InsertSQL = "INSERT INTO donation(clothName, brandID, ageGroup, gender, condition, material, ngoID, picture) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-    
-    try {
-        const { clothName, brandID, ageGroup, gender, condition, material, ngoID, picture } = req.body;
-        
-        const result = await Qexecution.queryExecute(InsertSQL, [clothName, brandID, ageGroup, gender, condition, material, ngoID, picture]);
-        
-        res.status(200).send({
-            status: "success",
-            message: "Donation added successfully.",
-            data: result,
-        });
-    } catch (err) {
-        console.error("Error adding donation:", err.message);
-        res.status(500).send({
-            status: "fail",
-            message: "Error adding donation.",
-            error: err.message,
-        });
-    }
-};
-
 exports.addDiscarded = async (req, res) => {
-    const InsertSQL = "INSERT INTO discarded(clothName, brand, material, suggestions) VALUES (?, ?, ?, ?)";
+    const InsertSQL = "INSERT INTO discarded(clothName, material, suggestions, userID) VALUES (?, ?, ?, ?)";
+    const deleteSQL = "DELETE FROM donation WHERE donationID=?"
     
     try {
-        const { clothName, brand, material, suggestions } = req.body;
+        const { donationID, clothName, material, suggestions, userID } = req.body;
         
-        const result = await Qexecution.queryExecute(InsertSQL, [clothName, brand, material, suggestions]);
+        const result = await Qexecution.queryExecute(InsertSQL, [clothName, material, suggestions, userID]);
+        const result2 = await Qexecution.queryExecute(deleteSQL, [donationID]);
         
         res.status(200).send({
             status: "success",
@@ -200,12 +193,17 @@ exports.addDiscarded = async (req, res) => {
 };
 
 exports.addDonated = async (req, res) => {
-    const InsertSQL = "INSERT INTO donated(donationID, deservingID) VALUES (?, ?)";
+    const InsertSQL = "INSERT INTO donated(clothName, brandID, ageGroup, gender, conditions, material, ngoID, userID, deservingID) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"; 
+    const deleteSQL = "DELETE FROM donation WHERE donationID=?";
     
     try {
-        const { donationID, deservingID } = req.body;
+        const { clothName, brandID, ageGroup, gender, conditions, material, ngoID, userID, deservingID, donationID } = req.body;
         
-        const result = await Qexecution.queryExecute(InsertSQL, [donationID, deservingID]);
+        // Insert into the donated table
+        const result = await Qexecution.queryExecute(InsertSQL, [clothName, brandID, ageGroup, gender, conditions, material, ngoID, userID, deservingID]);
+        
+        // Delete the record from the donation table after donation is moved to donated
+        const result2 = await Qexecution.queryExecute(deleteSQL, [donationID]);
         
         res.status(200).send({
             status: "success",
