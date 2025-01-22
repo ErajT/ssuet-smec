@@ -177,7 +177,8 @@ exports.getDiscarded = async (req, res) => {
     `;
 
     try {
-        const result = await Qexecution.queryExecute(GetSQL, []);
+        const {ngoID, brandID} = req.params;
+        const result = await Qexecution.queryExecute(GetSQL, [ngoID, brandID]);
         
         res.status(200).send({
             status: "success",
