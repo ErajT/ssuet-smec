@@ -1,6 +1,7 @@
 import React from "react";
 import {
     Container,
+    Button,
     Table,
     TableBody,
     TableCell,
@@ -8,15 +9,13 @@ import {
     TableHead,
     TableRow,
     Paper,
-    MenuItem,
-    Select,
-    InputLabel,
-    FormControl,
     Box,
     Typography,
 } from "@mui/material";
+import { useNavigate } from "react-router-dom";
 
 const UserHistory = () => {
+    const navigate = useNavigate();
     const clothesData = [
         {
             id: 1,
@@ -41,6 +40,10 @@ const UserHistory = () => {
             image: "Images/sweater.jpg",
         },
     ];
+
+    const handleSubmit = () => {
+        navigate("/donate-more"); // This will navigate to the /donate-more route
+      };
 
     return (
         <Container
@@ -107,6 +110,14 @@ const UserHistory = () => {
                     </Table>
                 </TableContainer>
             </Box>
+            {/* Button to navigate to another page */}
+      <Button
+        variant="contained"
+        onClick={handleSubmit}
+        style={{ marginTop: "20px",backgroundColor: "#2b6777" }}
+      >
+        Donate More
+      </Button>
         </Container>
     );
 };
