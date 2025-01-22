@@ -1,5 +1,28 @@
 const Qexecution = require("./query");
 
+exports.addUser = async (req, res) => {
+    const SQL = "INSERT INTO user(name, gender, age, location, email, phoneNo) VALUES ?";
+
+    try{
+        const {name, gender, age, location, email, phoneNo} = req.body;
+
+        const result = await Qexecution.queryExecute(SQL, [name, gender, age, location, email, phoneNo]);
+        
+        res.status(200).send({
+            status: "success",
+            message: "NGOs fetched successfully.",
+            data: result,
+        });
+    } catch (err) {
+        console.error("Error fetching NGOs:", err.message);
+        res.status(500).send({
+            status: "fail",
+            message: "Error fetching NGOs.",
+            error: err.message,
+        });
+    }
+};
+
 exports.getAllNGOs = async (req, res) => {
     const GetSQL = "SELECT * FROM ngo";
 
