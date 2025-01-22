@@ -2,6 +2,8 @@ const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 
+const UserRoutes = require('./Routers/UserRouters');
+
 let app = express();
 app.options('*', cors()); // Allow preflight requests
 
@@ -27,5 +29,6 @@ app.use(bodyParser.urlencoded({ limit: '200mb', extended: true }));
 
 //middleware for request body
 app.use(express.json());
+app.use('/Users', UserRoutes);
 
 module.exports = app;
