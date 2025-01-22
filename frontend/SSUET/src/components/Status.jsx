@@ -1,117 +1,142 @@
-import React, { useState } from 'react';
-import { Button, TextField, MenuItem, Select, FormControl, InputLabel, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
+import React, { useState } from "react";
+import {
+  Button,
+  MenuItem,
+  Select,
+  FormControl,
+  InputLabel,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+} from "@mui/material";
 
-const StatusForm = () => {
-  const [name, setName] = useState('');
-  const [clothName, setClothName] = useState('');
-  const [ageGroup, setAgeGroup] = useState('');
-  const [gender, setGender] = useState('');
-  const [condition, setCondition] = useState('');
-  const [material, setMaterial] = useState('');
-  const [status, setStatus] = useState('');
+const StatusTable = () => {
+  const [status, setStatus] = useState({});
   const [openDialog, setOpenDialog] = useState(false);
+  const [selectedRow, setSelectedRow] = useState(null);
 
-  const handleStatusChange = (event) => {
-    setStatus(event.target.value);
+  const dummyData = [
+    {
+      id: 1,
+      name: "John Doe",
+      clothName: "T-Shirt",
+      ageGroup: "Adult",
+      gender: "Male",
+      condition: "New",
+      material: "Cotton",
+      mode: "Delivery",
+      status: "Pending",
+    },
+    {
+      id: 2,
+      name: "Jane Smith",
+      clothName: "Jeans",
+      ageGroup: "Teen",
+      gender: "Female",
+      condition: "Used",
+      material: "Denim",
+      mode: "Pickup",
+      status: "Pending",
+    },
+  ];
+
+  const handleStatusChange = (event, row) => {
+    setStatus({ ...status, [row.id]: event.target.value });
+    setSelectedRow(row);
   };
 
-  const handleSubmit = () => {
-    if (status === 'Completed') {
-      setOpenDialog(true);
-    }
+  const handleSubmit = (row) => {
+    setOpenDialog(true);
+    setSelectedRow(row);
   };
 
   const handleCloseDialog = (confirmed) => {
     setOpenDialog(false);
-    if (confirmed) {
-      // Handle further actions on confirmed status
-      console.log('Status confirmed as Completed!');
+    if (confirmed && selectedRow) {
+      console.log(`Status for ${selectedRow.name} confirmed as ${status[selectedRow.id] || selectedRow.status}!`);
     }
   };
 
   return (
-    <div style={{ padding: '20px' }}>
-      <h2>Cloth Status Form</h2>
-
-      <TextField
-        label="Name"
-        variant="outlined"
-        fullWidth
-        margin="normal"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-      />
-      <TextField
-        label="Cloth Name"
-        variant="outlined"
-        fullWidth
-        margin="normal"
-        value={clothName}
-        onChange={(e) => setClothName(e.target.value)}
-      />
-      <TextField
-        label="Age Group"
-        variant="outlined"
-        fullWidth
-        margin="normal"
-        value={ageGroup}
-        onChange={(e) => setAgeGroup(e.target.value)}
-      />
-      <FormControl fullWidth margin="normal">
-        <InputLabel>Gender</InputLabel>
-        <Select
-          label="Gender"
-          value={gender}
-          onChange={(e) => setGender(e.target.value)}
-        >
-          <MenuItem value="Male">Male</MenuItem>
-          <MenuItem value="Female">Female</MenuItem>
-          <MenuItem value="Other">Other</MenuItem>
-        </Select>
-      </FormControl>
-      <TextField
-        label="Condition"
-        variant="outlined"
-        fullWidth
-        margin="normal"
-        value={condition}
-        onChange={(e) => setCondition(e.target.value)}
-      />
-      <TextField
-        label="Material"
-        variant="outlined"
-        fullWidth
-        margin="normal"
-        value={material}
-        onChange={(e) => setMaterial(e.target.value)}
-      />
-      <FormControl fullWidth margin="normal">
-        <InputLabel>Status</InputLabel>
-        <Select
-          label="Status"
-          value={status}
-          onChange={handleStatusChange}
-        >
-          <MenuItem value="Pending">Pending</MenuItem>
-          <MenuItem value="Completed">Completed</MenuItem>
-        </Select>
-      </FormControl>
-
-      <Button
-        variant="contained"
-        color="primary"
-        fullWidth
-        onClick={handleSubmit}
-        disabled={status !== 'Completed'}
-        style={{ marginTop: '20px' }}
-      >
-        Submit
-      </Button>
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "center", // Center horizontally
+        alignItems: "center",     // Center vertically
+        height: "100vh",          // Full screen height
+        flexDirection: "column",
+        marginRight:"20vw"  // Stack items vertically (heading and table)
+      }}
+    >
+      <h1 style={{ textAlign: "center", color: "#2b6777", marginBottom: "20px" }}>Cloth Status Table</h1>
+      <TableContainer component={Paper}>
+        <Table>
+          <TableHead style={{ backgroundColor: "#2b6777" }}>
+            <TableRow>
+              <TableCell style={{ color: "white" }}>Name</TableCell>
+              <TableCell style={{ color: "white" }}>Cloth Name</TableCell>
+              <TableCell style={{ color: "white" }}>Age Group</TableCell>
+              <TableCell style={{ color: "white" }}>Gender</TableCell>
+              <TableCell style={{ color: "white" }}>Condition</TableCell>
+              <TableCell style={{ color: "white" }}>Material</TableCell>
+              <TableCell style={{ color: "white" }}>Mode</TableCell>
+              <TableCell style={{ color: "white" }}>Status</TableCell>
+              <TableCell style={{ color: "white" }}>Action</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {dummyData.map((row) => (
+              <TableRow key={row.id}>
+                <TableCell>{row.name}</TableCell>
+                <TableCell>{row.clothName}</TableCell>
+                <TableCell>{row.ageGroup}</TableCell>
+                <TableCell>{row.gender}</TableCell>
+                <TableCell>{row.condition}</TableCell>
+                <TableCell>{row.material}</TableCell>
+                <TableCell>{row.mode}</TableCell>
+                <TableCell>
+                  <FormControl fullWidth>
+                    <InputLabel>Status</InputLabel>
+                    <Select
+                      value={status[row.id] || row.status}
+                      onChange={(e) => handleStatusChange(e, row)}
+                    >
+                      <MenuItem value="Pending">Pending</MenuItem>
+                      <MenuItem value="Completed">Completed</MenuItem>
+                    </Select>
+                  </FormControl>
+                </TableCell>
+                <TableCell>
+                  <Button
+                    variant="contained"
+                    style={{ backgroundColor: "#2b6777", color: "white" }}
+                    onClick={() => handleSubmit(row)}
+                  >
+                    Submit
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
 
       <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
         <DialogTitle>Confirm Status</DialogTitle>
         <DialogContent>
-          <p>Are you sure the status is "Completed"?</p>
+          <p>
+            Are you sure you want to set the status to "
+            {status[selectedRow?.id] || selectedRow?.status}" for{" "}
+            {selectedRow?.name}?
+          </p>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => handleCloseDialog(false)} color="primary">
@@ -126,5 +151,4 @@ const StatusForm = () => {
   );
 };
 
-
-export default StatusForm;
+export default StatusTable;

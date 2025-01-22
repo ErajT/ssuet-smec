@@ -49,8 +49,8 @@ const ResponsiveForm = styled.form`
 `;
 
 const SignUp = () => {
-    const backendUrl = process.env.BACKEND_URL;
-    console.log(backendUrl);
+    // const backendUrl = BACKEND_URL;
+    // console.log(backendUrl);
   const [accountType, setAccountType] = useState('');
   const [userData, setUserData] = useState({
     name: '',
@@ -81,7 +81,7 @@ const SignUp = () => {
   };
 
   const submitUserForm = () => {
-    fetch(`${backendUrl}/createUser`, {
+    fetch(`https://api.example.com/createUser`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(userData)

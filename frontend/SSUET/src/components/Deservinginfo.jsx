@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import {
   CssBaseline,
@@ -13,8 +13,11 @@ import {
   Box,
   Modal,
   TextField,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import * as XLSX from "xlsx";
+import Cookies from "js-cookie";
 
 const theme = createTheme({
   palette: {
@@ -34,6 +37,35 @@ function ExcelToMuiTable() {
   const [rows, setRows] = useState({ header: [], body: [] });
   const [open, setOpen] = useState(false);
   const [formData, setFormData] = useState({ name: "", gender: "", ageGroup: "", phoneNo: "" });
+  const [savedDeserving, setSavedDeserving] = useState([]);
+  const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
+
+  const ngoDetails = Cookies.get("ngoDetails");
+  let ngoID = null;
+
+  if (ngoDetails) {
+    try {
+      const parsedNgoDetails = JSON.parse(ngoDetails);
+      ngoID = parsedNgoDetails[0]?.ngoID || null;
+    } catch (error) {
+      console.error("Error parsing NGO details from cookies:", error);
+    }
+  }
+
+  console.log("Extracted ngoID:", ngoID);
+
+  useEffect(() => {
+    if (ngoID) {
+      fetch(`http://localhost:2000/NGO/getDeserving/${ngoID}`)
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.status === "success") {
+            setSavedDeserving(data.data);
+          }
+        })
+        .catch((error) => console.error("Error fetching deserving data:", error));
+    }
+  }, [ngoID]);
 
   const handleFileUpload = (event) => {
     const file = event.target.files[0];
@@ -49,6 +81,10 @@ function ExcelToMuiTable() {
         const header = jsonData[0] || [];
         const body = jsonData.slice(1);
         setRows({ header, body });
+
+        setSnackbar({ open: true, message: "Excel uploaded and data extracted successfully!", severity: "success" });
+
+        handleSaveBulkData(header, body);
       };
       reader.readAsArrayBuffer(file);
     }
@@ -58,62 +94,112 @@ function ExcelToMuiTable() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleAddRow = () => {
-    setRows({
-      header: ["Name", "Gender", "Age Group", "Phone No"],
-      body: [...rows.body, Object.values(formData)],
-    });
-    setOpen(false);
-    setFormData({ name: "", gender: "", ageGroup: "", phoneNo: "" });
+  const handleSaveBulkData = (header = rows.header, body = rows.body) => {
+    fetch("http://localhost:2000/NGO/addDeservingBulk", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        deservingRecords: body.map((row) => ({
+          name: row[0],
+          gender: row[1],
+          ageGroup: row[2],
+          phoneNo: row[3],
+          ngoID: parseInt(ngoID),
+        })),
+      }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.status === "success") {
+          setSnackbar({ open: true, message: "Bulk data saved successfully!", severity: "success" });
+          fetch(`http://localhost:2000/NGO/getDeserving/${ngoID}`)
+            .then((response) => response.json())
+            .then((data) => setSavedDeserving(data.data));
+        }
+      })
+      .catch((error) => console.error("Error saving bulk data:", error));
+  };
+
+  const handleAddIndividualData = () => {
+    fetch("http://localhost:2000/NGO/addDeserving", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        ...formData,
+        ngoID: parseInt(ngoID),
+      }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.status === "success") {
+          setSnackbar({ open: true, message: "Individual data added successfully!", severity: "success" });
+          fetch(`http://localhost:2000/NGO/getDeserving/${ngoID}`)
+            .then((response) => response.json())
+            .then((data) => setSavedDeserving(data.data));
+        }
+      })
+      .catch((error) => console.error("Error adding individual data:", error));
   };
 
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Box sx={{
-        minHeight: "100vh",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        padding: "50px",
-      }}>
-        <Box sx={{
-          width: "100%",
-          maxWidth: "800px",
-          padding: "30px",
-          borderRadius: "12px",
-          boxShadow: "0 8px 20px rgba(0, 0, 0, 0.15)",
-          backgroundColor: "#fff",
-          textAlign: "center",
-        }}>
-          <Typography variant="h3" gutterBottom sx={{ color: theme.palette.primary.main, fontWeight: "bold" }}>
+      <Box
+  sx={{
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "center",
+    alignItems: "center",
+    textAlign: "center",
+    width: "100%",
+    height: "100vh", 
+    bgcolor: "#e0e0e0", 
+  }}
+>
+  <Box
+    sx={{
+      maxWidth: "800px",
+      width: "90%",
+      p: 4,
+      bgcolor: "#fff",
+      borderRadius: "12px",
+      boxShadow: 3,
+    }}
+  >
+          <Typography variant="h3" gutterBottom sx={{ fontWeight: "bold", color: theme.palette.primary.main }}>
             Recipient Table
           </Typography>
-          <Button variant="contained" component="label" sx={{ marginBottom: "20px" }}>
-            Upload Excel File
-            <input type="file" hidden accept=".xlsx, .xls" onChange={handleFileUpload} />
-          </Button>
-          <Button variant="contained" color="primary" onClick={() => setOpen(true)}>
-            Add New Entry
-          </Button>
-          {rows.header.length > 0 ? (
-            <TableContainer sx={{ marginTop: "20px", border: "1px solid #ddd", borderRadius: "8px" }}>
-              <Table>
+          <Box sx={{ display: "flex", justifyContent: "center", gap: 2, mb: 3 }}>
+            <Button variant="contained" component="label">
+              Upload Excel File
+              <input type="file" hidden accept=".xlsx, .xls" onChange={handleFileUpload} />
+            </Button>
+            <Button variant="contained" color="primary" onClick={() => setOpen(true)}>
+              Add New Entry
+            </Button>
+          </Box>
+          {savedDeserving.length > 0 ? (
+            <TableContainer sx={{ marginTop: "20px", border: "1px solid #ddd", borderRadius: "8px", maxHeight: "400px" }}>
+              <Table stickyHeader>
                 <TableHead>
-                  <TableRow sx={{ backgroundColor: theme.palette.primary.main }}>
-                    {rows.header.map((col, index) => (
-                      <TableCell key={index} sx={{ fontWeight: "bold", color: "#fff", textAlign: "center" }}>
+                  <TableRow>
+                    {["Name", "Gender", "Age Group", "Phone No"].map((col, index) => (
+                      <TableCell
+                        key={index}
+                        sx={{ fontWeight: "bold", color: "#fff", textAlign: "center", backgroundColor: theme.palette.primary.main }}
+                      >
                         {col}
                       </TableCell>
                     ))}
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {rows.body.map((row, rowIndex) => (
+                  {savedDeserving.map((row, rowIndex) => (
                     <TableRow key={rowIndex} sx={{ "&:nth-of-type(odd)": { backgroundColor: "#f0f0f0" } }}>
-                      {row.map((cell, cellIndex) => (
-                        <TableCell key={cellIndex} sx={{ textAlign: "center" }}>{cell}</TableCell>
-                      ))}
+                      <TableCell sx={{ textAlign: "center" }}>{row.name}</TableCell>
+                      <TableCell sx={{ textAlign: "center" }}>{row.gender}</TableCell>
+                      <TableCell sx={{ textAlign: "center" }}>{row.ageGroup}</TableCell>
+                      <TableCell sx={{ textAlign: "center" }}>{row.phoneNo}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -121,33 +207,46 @@ function ExcelToMuiTable() {
             </TableContainer>
           ) : (
             <Typography variant="body1" align="center" sx={{ marginTop: "20px", color: "#777" }}>
-              No data available. Please upload an Excel file.
+              No data available. Please upload an Excel file or add a new entry.
             </Typography>
           )}
         </Box>
       </Box>
       <Modal open={open} onClose={() => setOpen(false)}>
-        <Box sx={{
-          position: "absolute",
-          top: "50%",
-          left: "50%",
-          transform: "translate(-50%, -50%)",
-          width: "400px",
-          bgcolor: "background.paper",
-          boxShadow: 24,
-          p: 4,
-          borderRadius: "8px",
-        }}>
-          <Typography variant="h6" gutterBottom>Add New Recipient</Typography>
+        <Box
+          sx={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            width: "400px",
+            bgcolor: "background.paper",
+            boxShadow: 24,
+            p: 4,
+            borderRadius: "8px",
+          }}
+        >
+          <Typography variant="h6" gutterBottom>
+            Add New Recipient
+          </Typography>
           <TextField fullWidth margin="normal" label="Name" name="name" value={formData.name} onChange={handleInputChange} />
           <TextField fullWidth margin="normal" label="Gender" name="gender" value={formData.gender} onChange={handleInputChange} />
           <TextField fullWidth margin="normal" label="Age Group" name="ageGroup" value={formData.ageGroup} onChange={handleInputChange} />
           <TextField fullWidth margin="normal" label="Phone No" name="phoneNo" value={formData.phoneNo} onChange={handleInputChange} />
-          <Button variant="contained" color="primary" onClick={handleAddRow} sx={{ mt: 2 }}>
+          <Button variant="contained" color="primary" onClick={handleAddIndividualData} sx={{ mt: 2 }}>
             Add
           </Button>
         </Box>
       </Modal>
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+      >
+        <Alert onClose={() => setSnackbar({ ...snackbar, open: false })} severity={snackbar.severity} sx={{ width: "100%" }}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </ThemeProvider>
   );
 }
