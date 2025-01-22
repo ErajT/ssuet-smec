@@ -5,6 +5,7 @@ import Header from "./components/Header";
 import Deservinginfo from "./components/Deservinginfo"; 
 import Ngotable from "./components/Ngotable"; 
 import Status from "./components/Status"; 
+import Login from "./components/login";
 // import Landing from "./components/Landing"; 
 
 const AppContainer = styled.div`
@@ -25,6 +26,7 @@ const App = () => {
           <Route path="/deserving" element={<Deservinginfo />} />
           <Route path="/ngotable" element={<Ngotable />} />
           <Route path="/status" element={<Status/>} />
+          <Route path="/login" element={<Login/>} />
           {/* Add more routes here */}
         </Routes>
       </AppContainer>
