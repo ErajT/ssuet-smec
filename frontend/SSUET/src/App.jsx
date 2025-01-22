@@ -17,7 +17,7 @@ const App = () => {
     <Router>
       <AppContainer>
         <Routes>
-          <Route path="/header" element={<Header />} />
+          <Route path="/" element={<Header />} />
           <Route path="/User" element={<User/>} />
           {/* Add more routes here */}
         </Routes>
