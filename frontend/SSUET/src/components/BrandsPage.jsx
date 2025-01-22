@@ -38,7 +38,7 @@ const BrandsPage = () => {
 
   const handleCardClick = (brand) => {
     // Save brand details in a cookie
-    Cookies.set("selectedBrand", JSON.stringify(brand), { expires: 1 }); // Expires in 1 day
+    Cookies.set("selectedBrand", JSON.stringify(brand)); // Expires in 1 day
 
     // Navigate to /ngotable
     navigate("/ngotable");
