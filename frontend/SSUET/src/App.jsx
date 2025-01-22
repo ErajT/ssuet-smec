@@ -10,6 +10,7 @@ import Login from "./components/login";
 import User from "./components/User";
 import DonateMore from "./components/DonateMore";
 import BrandsPage from "./components/BrandsPage";
+import SignUp from "./components/Signup";
 
 const AppContainer = styled.div`
   display: flex;
@@ -34,6 +35,7 @@ const App = () => {
           <Route path="/User" element={<User/>} />
           <Route path="/donate-more" element={<DonateMore/>} />
           <Route path="/Brands" element={<BrandsPage/>} />
+          <Route path="/signup" element={<SignUp/>} />
           {/* Add more routes here */}
         </Routes>
       </AppContainer>
