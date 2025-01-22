@@ -1,9 +1,11 @@
 const Qexecution = require("./query");
+require('dotenv').config(); // Ensure dotenv is loaded for environment variables
+const Cerebras = require('@cerebras/cerebras_cloud_sdk');
 
 exports.addDeserving = async (req, res) => {
     // Define the SQL query to insert into the deserving table
     const InsertSQL = "INSERT INTO deserving(name, ageGroup, gender, phoneNo, ngoID) VALUES (?, ?, ?, ?, ?)";
-    
+
     try {
         // Extract the data to insert from the request body
         const { name, ageGroup, gender, phoneNo, ngoID } = req.body;
@@ -31,11 +33,11 @@ exports.addDeserving = async (req, res) => {
 exports.addDeservingBulk = async (req, res) => {
     // Define the base SQL query for bulk insertion
     const InsertSQL = "INSERT INTO deserving(name, ageGroup, gender, phoneNo, ngoID) VALUES ?";
-    
+
     try {
         // Extract the data to insert from the request body
         const deservingRecords = req.body.deservingRecords; // Expecting an array of objects with keys: name, ageGroup, gender, phoneNo
-        
+
         // Map the records into an array of arrays for bulk insertion
         const values = deservingRecords.map(record => [
             record.name,
@@ -67,11 +69,11 @@ exports.addDeservingBulk = async (req, res) => {
 
 exports.getDeserving = async (req, res) => {
     const GetSQL = "SELECT * FROM deserving WHERE ngoID=?";
-    
+
     try {
-        const {ngoID} = req.params;
+        const { ngoID } = req.params;
         const result = await Qexecution.queryExecute(GetSQL, [ngoID]);
-        
+
         res.status(200).send({
             status: "success",
             message: "Deserving individuals fetched successfully.",
@@ -94,11 +96,11 @@ exports.getDonations = async (req, res) => {
         JOIN user ON donation.userID = user.userID 
         WHERE ngoID=? AND brandID=?
     `;
-    
+
     try {
-        const {ngoID, brandID} = req.params;
+        const { ngoID, brandID } = req.params;
         const result = await Qexecution.queryExecute(GetSQL, [ngoID, brandID]);
-        
+
         res.status(200).send({
             status: "success",
             message: "Donations fetched successfully.",
@@ -122,11 +124,11 @@ exports.getDonated = async (req, res) => {
         JOIN deserving ON donated.deservingID = deserving.deservingID
         WHERE ngoID=? AND brandID=?
     `;
-    
+
     try {
-        const {ngoID, brandID} = req.params;
+        const { ngoID, brandID } = req.params;
         const result = await Qexecution.queryExecute(GetSQL, [ngoID, brandID]);
-        
+
         res.status(200).send({
             status: "success",
             message: "Donated records fetched successfully.",
@@ -148,10 +150,10 @@ exports.getDiscarded = async (req, res) => {
         FROM discarded
         JOIN users ON discarded.userID = users.userID
     `;
-    
+
     try {
         const result = await Qexecution.queryExecute(GetSQL, []);
-        
+
         res.status(200).send({
             status: "success",
             message: "Discarded records fetched successfully.",
@@ -167,13 +169,45 @@ exports.getDiscarded = async (req, res) => {
     }
 };
 
+// Initialize the Cerebras client
+const client = new Cerebras({
+    apiKey: process.env.API_KEY,
+});
+
+// Function to summarize comments
+const aiSuggestions = async (clothName, material) => {
+    try {
+        const response = await client.chat.completions.create({
+            messages: [
+                {
+                    role: 'user',
+                    content: `Based on the discarded clothing item ${clothName} made of ${material}, provide a professional and concise suggestion on how it can be recycled or repurposed into other products while ensuring eco-friendliness and minimal environmental impact. Focus on actionable recycling or repurposing methods tailored to the material and avoid unnecessary details.`,
+                },
+            ],
+            model: 'llama3.1-8b',
+        });
+
+        // Extract the summary content
+        const suggestions = response.choices?.[0]?.message?.content;
+
+        if (!suggestions) {
+            throw new Error('Failed to generate suggestions');
+        }
+
+        return suggestions;
+    } catch (error) {
+        console.error('Error generating suggestions', error.message);
+        throw new Error('Error generating suggestions');
+    }
+};
+
 exports.addDiscarded = async (req, res) => {
     const SelectSQL = "SELECT clothName, material, userID FROM donation WHERE donationID = ?";
     const InsertSQL = "INSERT INTO discarded(clothName, material, suggestions, userID) VALUES (?, ?, ?, ?)";
     const DeleteSQL = "DELETE FROM donation WHERE donationID = ?";
 
     try {
-        const { donationID, suggestions } = req.body;
+        const { donationID } = req.body;
 
         // Fetch the donation details
         const donationDetails = await Qexecution.queryExecute(SelectSQL, [donationID]);
@@ -186,6 +220,7 @@ exports.addDiscarded = async (req, res) => {
 
         // Insert into discarded table
         const { clothName, material, userID } = donationDetails[0];
+        const suggestions = await aiSuggestions(clothName, material);
         const result = await Qexecution.queryExecute(InsertSQL, [clothName, material, suggestions, userID]);
 
         // Delete from donation table
@@ -285,32 +320,28 @@ exports.addDonation = async (req, res) => {
 };
 
 exports.getDetails = async (req, res) => {
-        const GetSQL = "SELECT * FROM ngo WHERE email = ?";
-    
-        try {
-            // Extract userID from request parameters
-            const { email } = req.params;
-    
-            // Execute the query with the userID
-            const result = await Qexecution.queryExecute(GetSQL, [email]);
-    
-            // Respond with the fetched data
-            res.status(200).send({
-                status: "success",
-                message: "Details for the user fetched successfully.",
-                data: result,
-            });
-        } catch (err) {
-            console.error("Error fetching details for the user:", err.message);
-            res.status(500).send({
-                status: "fail",
-                message: "Error fetching details for the user.",
-                error: err.message,
-            });
-        }
-}
+    const GetSQL = "SELECT * FROM ngo WHERE email = ?";
 
-exports.genAI = async (req, res) => {
-    
+    try {
+        // Extract userID from request parameters
+        const { email } = req.params;
+
+        // Execute the query with the userID
+        const result = await Qexecution.queryExecute(GetSQL, [email]);
+
+        // Respond with the fetched data
+        res.status(200).send({
+            status: "success",
+            message: "Details for the user fetched successfully.",
+            data: result,
+        });
+    } catch (err) {
+        console.error("Error fetching details for the user:", err.message);
+        res.status(500).send({
+            status: "fail",
+            message: "Error fetching details for the user.",
+            error: err.message,
+        });
+    }
 }
 

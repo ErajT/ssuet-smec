@@ -32,9 +32,5 @@ router.route('/addDiscarded')
 
 router.route('/getDetails/:email')
     .get(NGOHandler.getDetails);
-
-router.route('/genAI')
-    .post(NGOHandler.genAI);
-
     
 module.exports = router
