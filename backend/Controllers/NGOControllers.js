@@ -140,6 +140,33 @@ exports.getDonations = async (req, res) => {
     }
 };
 
+exports.getPending = async (req, res) => {
+    const GetSQL = `
+        SELECT pending.*, user.name AS userName
+        FROM pending
+        JOIN user ON pending.userID = user.userID 
+        WHERE ngoID=? AND brandID=?
+    `;
+
+    try {
+        const { ngoID, brandID } = req.params;
+        const result = await Qexecution.queryExecute(GetSQL, [ngoID, brandID]);
+
+        res.status(200).send({
+            status: "success",
+            message: "Donations fetched successfully.",
+            data: result,
+        });
+    } catch (err) {
+        console.error("Error fetching donations:", err.message);
+        res.status(500).send({
+            status: "fail",
+            message: "Error fetching donations.",
+            error: err.message,
+        });
+    }
+};
+
 exports.getDonated = async (req, res) => {
     const GetSQL = `
         SELECT donated.*, user.name AS donatedBy, deserving.name AS donatedTo
@@ -198,18 +225,27 @@ exports.getDiscarded = async (req, res) => {
 // Function to summarize comments
 const aiSuggestions = async (clothName, material) => {
     try {
-        const response = await client.chat.completions.create({
-            messages: [
-                {
-                    role: 'user',
-                    content: `Based on the discarded clothing item ${clothName} made of ${material}, provide a professional and concise suggestion on how it can be recycled or repurposed into other products while ensuring eco-friendliness and minimal environmental impact. Focus on actionable recycling or repurposing methods tailored to the material and avoid unnecessary details.`,
-                },
-            ],
-            model: 'llama3.1-8b',
-        });
+
+        const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+            method: "POST",
+            headers: {
+            //   "Authorization": `${API_KEY}`,
+              "Authorization": `Bearer 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`,            
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              "model": "meta-llama/llama-3.1-8b-instruct:free",
+              "messages": [
+                {"role": "system", "content": `Based on the discarded clothing item ${clothName} made of ${material}, provide a professional and concise suggestion on how it can be recycled or repurposed into other products while ensuring eco-friendliness and minimal environmental impact. Focus very concisely on actionable recycling or repurposing methods tailored to the material and avoid unnecessary details. Strictly return only one best suggestion. remove any * and numbering`},
+              ],
+            })
+          });
+          
+          const Res = await response.json();
+        //   console.log(Res.choices?.[0]?.message?.content);
 
         // Extract the summary content
-        const suggestions = response.choices?.[0]?.message?.content;
+        const suggestions = Res.choices?.[0]?.message?.content;
 
         if (!suggestions) {
             throw new Error('Failed to generate suggestions');
@@ -225,7 +261,7 @@ const aiSuggestions = async (clothName, material) => {
 
 exports.addDiscarded = async (req, res) => {
     const SelectSQL = "SELECT clothName, material, userID, ngoID, brandID FROM donation WHERE donationID = ?";
-    const InsertSQL = "INSERT INTO discarded(clothName, material, suggestions, userID, ngoID, brandID) VALUES (?, ?, ?, ?, ?, ?)";
+    const InsertSQL = "INSERT INTO discarded(clothName, material, suggestions, userID, ngoID, brandID) VALUES (?,?,?,?,?,?)";
     const DeleteSQL = "DELETE FROM donation WHERE donationID = ?";
 
     try {
@@ -246,8 +282,8 @@ exports.addDiscarded = async (req, res) => {
         }
 
         // Insert into discarded table
-        const { clothName, material, userID } = donationDetails[0];
-        const result = await Qexecution.queryExecute(InsertSQL, [clothName, material, suggestions, userID]);
+        const { clothName, material, userID, ngoID, brandID } = donationDetails[0];
+        const result = await Qexecution.queryExecute(InsertSQL, [clothName, material, suggestions, userID, ngoID, brandID]);
 
         // Delete from donation table
         const result2 = await Qexecution.queryExecute(DeleteSQL, [donationID]);

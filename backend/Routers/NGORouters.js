@@ -18,6 +18,9 @@ router.route('/getDeserving/:ngoID')
 router.route('/getDonation/:ngoID/:brandID')
     .get(NGOHandler.getDonations);
 
+router.route('/getPending/:ngoID/:brandID')
+    .get(NGOHandler.getPending);
+
 router.route('/getDonated/:ngoID/:brandID')
     .get(NGOHandler.getDonated);
 
