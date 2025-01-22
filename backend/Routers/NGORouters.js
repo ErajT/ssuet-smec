@@ -21,6 +21,9 @@ router.route('/getDonated/:ngoID/:brandID')
 router.route('/getDiscarded')
     .get(NGOHandler.getDiscarded);
 
+router.route('/addDonation')
+    .post(NGOHandler.addDonation);
+
 router.route('/addDonated')
     .post(NGOHandler.addDonated);
 

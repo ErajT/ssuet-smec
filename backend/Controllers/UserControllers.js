@@ -44,29 +44,29 @@ exports.getAllBrands = async (req, res) => {
 };
 
 
-exports.addDonation = async (req, res) => {
-    const InsertSQL = "INSERT INTO donation(clothName, brandID, ageGroup, gender, conditions, material, ngoID, userID, picture) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
-    
+exports.addPending = async (req, res) => {
+    const InsertSQL = "INSERT INTO pending(clothName, brandID, ageGroup, gender, conditions, material, ngoID, userID, picture, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
     try {
-        const { clothName, brandID, ageGroup, gender, condition, material, ngoID,  userID , picture} = req.body;
-        // console.log(clothName, brandID, ageGroup, gender, condition, material, ngoID,  userID);
-        
-        const result = await Qexecution.queryExecute(InsertSQL, [clothName, brandID, ageGroup, gender, condition, material, ngoID, userID, picture]);
-        
+        const { clothName, brandID, ageGroup, gender, condition, material, ngoID, userID, picture, status } = req.body;
+
+        const result = await Qexecution.queryExecute(InsertSQL, [clothName, brandID, ageGroup, gender, condition, material, ngoID, userID, picture, status]);
+
         res.status(200).send({
             status: "success",
-            message: "Donation added successfully.",
+            message: "Pending record added successfully.",
             data: result,
         });
     } catch (err) {
-        console.error("Error adding donation:", err.message);
+        console.error("Error adding pending record:", err.message);
         res.status(500).send({
             status: "fail",
-            message: "Error adding donation.",
+            message: "Error adding pending record.",
             error: err.message,
         });
     }
 };
+
 
 exports.getDonationsByUser = async (req, res) => {
     const GetSQL = "SELECT * FROM donation WHERE userID = ?";

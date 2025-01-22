@@ -9,8 +9,8 @@ router.route('/getAllBrands')
 router.route('/getAllNGOs')
     .get(UserHandler.getAllNGOs);
 
-router.route('/addDonation')
-    .post(UserHandler.addDonation);
+router.route('/addPending')
+    .post(UserHandler.addPending);
 
 router.route('/getDonations/:userID')
     .get(UserHandler.getDonationsByUser)

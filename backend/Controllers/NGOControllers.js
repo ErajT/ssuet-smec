@@ -168,57 +168,119 @@ exports.getDiscarded = async (req, res) => {
 };
 
 exports.addDiscarded = async (req, res) => {
+    const SelectSQL = "SELECT clothName, material, userID FROM donation WHERE donationID = ?";
     const InsertSQL = "INSERT INTO discarded(clothName, material, suggestions, userID) VALUES (?, ?, ?, ?)";
-    const deleteSQL = "DELETE FROM donation WHERE donationID=?"
-    
+    const DeleteSQL = "DELETE FROM donation WHERE donationID = ?";
+
     try {
-        const { donationID, clothName, material, suggestions, userID } = req.body;
-        
+        const { donationID, suggestions } = req.body;
+
+        // Fetch the donation details
+        const donationDetails = await Qexecution.queryExecute(SelectSQL, [donationID]);
+        if (donationDetails.length === 0) {
+            return res.status(404).send({
+                status: "fail",
+                message: "Donation not found.",
+            });
+        }
+
+        // Insert into discarded table
+        const { clothName, material, userID } = donationDetails[0];
         const result = await Qexecution.queryExecute(InsertSQL, [clothName, material, suggestions, userID]);
-        const result2 = await Qexecution.queryExecute(deleteSQL, [donationID]);
-        
+
+        // Delete from donation table
+        const result2 = await Qexecution.queryExecute(DeleteSQL, [donationID]);
+
         res.status(200).send({
             status: "success",
             message: "Discarded record added successfully.",
             data: result,
         });
     } catch (err) {
-        console.error("Error adding discarded record:", err.message);
+        console.error("Error processing discarded record:", err.message);
         res.status(500).send({
             status: "fail",
-            message: "Error adding discarded record.",
+            message: "Error processing discarded record.",
             error: err.message,
         });
     }
 };
 
 exports.addDonated = async (req, res) => {
-    const InsertSQL = "INSERT INTO donated(clothName, brandID, ageGroup, gender, conditions, material, ngoID, userID, deservingID) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"; 
-    const deleteSQL = "DELETE FROM donation WHERE donationID=?";
-    
+    const SelectSQL = "SELECT clothName, brandID, ageGroup, gender, conditions, material, ngoID, userID FROM donation WHERE donationID = ?";
+    const InsertSQL = "INSERT INTO donated(clothName, brandID, ageGroup, gender, conditions, material, ngoID, userID, deservingID, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    const DeleteSQL = "DELETE FROM donation WHERE donationID = ?";
+
     try {
-        const { clothName, brandID, ageGroup, gender, conditions, material, ngoID, userID, deservingID, donationID } = req.body;
-        
-        // Insert into the donated table
-        const result = await Qexecution.queryExecute(InsertSQL, [clothName, brandID, ageGroup, gender, conditions, material, ngoID, userID, deservingID]);
-        
-        // Delete the record from the donation table after donation is moved to donated
-        const result2 = await Qexecution.queryExecute(deleteSQL, [donationID]);
-        
+        const { donationID, deservingID } = req.body;
+
+        // Fetch the donation details
+        const donationDetails = await Qexecution.queryExecute(SelectSQL, [donationID]);
+        if (donationDetails.length === 0) {
+            return res.status(404).send({
+                status: "fail",
+                message: "Donation not found.",
+            });
+        }
+
+        // Insert into donated table
+        const { clothName, brandID, ageGroup, gender, conditions, material, ngoID, userID } = donationDetails[0];
+        const result = await Qexecution.queryExecute(InsertSQL, [clothName, brandID, ageGroup, gender, conditions, material, ngoID, userID, deservingID, "donated"]);
+
+        // Delete from donation table
+        const result2 = await Qexecution.queryExecute(DeleteSQL, [donationID]);
+
         res.status(200).send({
             status: "success",
             message: "Donated record added successfully.",
             data: result,
         });
     } catch (err) {
-        console.error("Error adding donated record:", err.message);
+        console.error("Error processing donated record:", err.message);
         res.status(500).send({
             status: "fail",
-            message: "Error adding donated record.",
+            message: "Error processing donated record.",
             error: err.message,
         });
     }
 };
 
+exports.addDonation = async (req, res) => {
+    const SelectSQL = "SELECT clothName, brandID, ageGroup, gender, conditions, material, ngoID, userID, picture FROM pending WHERE pendingID = ?";
+    const InsertSQL = "INSERT INTO donation(clothName, brandID, ageGroup, gender, conditions, material, ngoID, userID, picture, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    const DeleteSQL = "DELETE FROM pending WHERE pendingID = ?";
 
+    try {
+        const { pendingID } = req.body;
+
+        // Fetch the pending details
+        const pendingDetails = await Qexecution.queryExecute(SelectSQL, [pendingID]);
+        if (pendingDetails.length === 0) {
+            return res.status(404).send({
+                status: "fail",
+                message: "Pending record not found.",
+            });
+        }
+
+        // Insert into donation table
+        const { clothName, brandID, ageGroup, gender, conditions, material, ngoID, userID, picture } = pendingDetails[0];
+        const result = await Qexecution.queryExecute(InsertSQL, [clothName, brandID, ageGroup, gender, conditions, material, ngoID, userID, picture, "not donated yet"]);
+
+        // Delete from pending table
+        const result2 = await Qexecution.queryExecute(DeleteSQL, [pendingID]);
+
+        res.status(200).send({
+            status: "success",
+            message: "Donation added successfully and removed from pending.",
+            data: result,
+        });
+    } catch (err) {
+        console.error("Error processing donation:", err.message);
+        res.status(500).send({
+            status: "fail",
+            message: "Error processing donation.",
+            error: err.message,
+        });
+    }
+};
 
