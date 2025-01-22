@@ -25,6 +25,7 @@ const UserHistory = () => {
             material: "Cotton",
             clothName: "Shirt",
             condition: "New",
+            status: "completed",
             action: "Donate",
             image: "Images/shirt.jpg",
         },
@@ -36,6 +37,7 @@ const UserHistory = () => {
             material: "Wool",
             clothName: "Sweater",
             condition: "Used",
+            status: "pending",
             action: "Donate",
             image: "Images/sweater.jpg",
         },
@@ -78,6 +80,7 @@ const UserHistory = () => {
                                     "Material",
                                     "Cloth Name",
                                     "Condition",
+                                    "Status",
                                     "Image",
                                 ].map((header) => (
                                     <TableCell key={header} sx={{ color: "#ffffff" }}>
@@ -97,6 +100,7 @@ const UserHistory = () => {
                                         <TableCell>{row.material}</TableCell>
                                         <TableCell>{row.clothName}</TableCell>
                                         <TableCell>{row.condition}</TableCell>
+                                        <TableCell>{row.status}</TableCell>
                                         <TableCell>
                                             <img
                                                 src={row.image}
