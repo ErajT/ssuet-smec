@@ -68,12 +68,12 @@ exports.getAllBrands = async (req, res) => {
 
 
 exports.addPending = async (req, res) => {
-    const InsertSQL = "INSERT INTO pending(clothName, brandID, ageGroup, gender, conditions, material, ngoID, userID, picture, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    const InsertSQL = "INSERT INTO pending(clothName, brandID, ageGroup, gender, conditions, material, ngoID, userID, picture, status, mode) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
     try {
-        const { clothName, brandID, ageGroup, gender, condition, material, ngoID, userID, picture, status } = req.body;
-
-        const result = await Qexecution.queryExecute(InsertSQL, [clothName, brandID, ageGroup, gender, condition, material, ngoID, userID, picture, status]);
+        const { clothName, brandID, ageGroup, gender, condition, material, ngoID, userID, picture, status, mode } = req.body;
+        console.log(clothName, brandID, ageGroup, gender, condition, material, ngoID, userID, picture, status, mode);
+        const result = await Qexecution.queryExecute(InsertSQL, [clothName, brandID, ageGroup, gender, condition, material, ngoID, userID, picture, status, mode]);
 
         res.status(200).send({
             status: "success",

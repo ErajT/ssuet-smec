@@ -25,7 +25,6 @@ exports.addNGO = async (req, res) => {
     }
 };
 
-
 exports.addDeserving = async (req, res) => {
     // Define the SQL query to insert into the deserving table
     const InsertSQL = "INSERT INTO deserving(name, ageGroup, gender, phoneNo, ngoID) VALUES (?, ?, ?, ?, ?)";
