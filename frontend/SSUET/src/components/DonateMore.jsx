@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import {
   Container,
   Box,
-  TextField,
   Button,
   Typography,
   MenuItem,
@@ -26,6 +25,15 @@ const DonateMore = () => {
     condition: 3,
     image: null,
   });
+
+  const [ngos, setNgos] = useState(["JDC", "Saylani"]);
+
+  const [brands, setBrands] = useState(["Khaddi", "J.", "Gul Ahmed", "Bonanza Satrangi", "Sana Safinaz"]);
+
+  const [gender, setGender] = useState(["Male", "Female"]);
+  const [age, setAge] = useState(["0-5", "6-10", "11-20", "21-35"]);
+  const [material, setMaterial] = useState(["Cotton", "Wool"]);
+  const [clothName, setClothName] = useState(["Shirt", "Sweater", "Pant", "Trouser", "Socks", "Others"]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -74,7 +82,7 @@ const DonateMore = () => {
             onChange={handleChange}
             required
           >
-            {["JDC", "Saylani"].map(
+            {ngos.map(
               (option) => (
                 <MenuItem key={option} value={option}>
                   {option}
@@ -92,7 +100,7 @@ const DonateMore = () => {
             onChange={handleChange}
             required
           >
-            {["Khaddi", "J.", "Gul Ahmed", "Bonanza Satrangi", "Sana Safinaz"].map(
+            {brands.map(
               (option) => (
                 <MenuItem key={option} value={option}>
                   {option}
@@ -111,7 +119,7 @@ const DonateMore = () => {
             onChange={handleChange}
             required
           >
-            {["Male", "Female"].map((option) => (
+            {gender.map((option) => (
               <MenuItem key={option} value={option}>
                 {option}
               </MenuItem>
@@ -128,7 +136,7 @@ const DonateMore = () => {
             onChange={handleChange}
             required
           >
-            {["0-5", "6-10", "11-20", "21-35"].map((option) => (
+            {age.map((option) => (
               <MenuItem key={option} value={option}>
                 {option}
               </MenuItem>
@@ -145,7 +153,7 @@ const DonateMore = () => {
             onChange={handleChange}
             required
           >
-            {["Cotton", "Wool"].map((option) => (
+            {material.map((option) => (
               <MenuItem key={option} value={option}>
                 {option}
               </MenuItem>
@@ -162,7 +170,7 @@ const DonateMore = () => {
             onChange={handleChange}
             required
           >
-            {["Shirt", "Sweater", "Pant", "Trouser", "Socks", "Others"].map(
+            {clothName.map(
               (option) => (
                 <MenuItem key={option} value={option}>
                   {option}
@@ -191,7 +199,7 @@ const DonateMore = () => {
         />
 
         {/* Upload Image */}
-        <Box sx={{ marginBottom: "20px" }}>
+        <Box sx={{ marginBottom: "20px", marginTop: "20px" }}>
           <Typography gutterBottom>Upload Image</Typography>
           <input type="file" accept="image/*" onChange={handleImageUpload} required />
         </Box>
