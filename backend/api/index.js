@@ -4,7 +4,7 @@ const bodyParser = require('body-parser');
 
 const UserRoutes = require('./Routers/UserRouters');
 const NGORoutes = require('./Routers/NGORouters');
-const userRouter = require('./api/user/user.router');
+const userRouter = require('../api/user/user.router');
 
 let app = express();
 app.options('*', cors()); // Allow preflight requests
