@@ -194,8 +194,8 @@ exports.getDiscarded = async (req, res) => {
 
 
 exports.addDiscarded = async (req, res) => {
-    const SelectSQL = "SELECT clothName, material, userID FROM donation WHERE donationID = ?";
-    const InsertSQL = "INSERT INTO discarded(clothName, material, suggestions, userID) VALUES (?, ?, ?, ?)";
+    const SelectSQL = "SELECT clothName, material, userID, ngoID, brandID FROM donation WHERE donationID = ?";
+    const InsertSQL = "INSERT INTO discarded(clothName, material, suggestions, userID, ngoID, brandID) VALUES (?, ?, ?, ?, ?, ?)";
     const DeleteSQL = "DELETE FROM donation WHERE donationID = ?";
 
     try {
@@ -213,7 +213,7 @@ exports.addDiscarded = async (req, res) => {
 
         // Insert into discarded table
         const { clothName, material, userID } = donationDetails[0];
-        const result = await Qexecution.queryExecute(InsertSQL, [clothName, material, suggestions, userID]);
+        const result = await Qexecution.queryExecute(InsertSQL, [clothName, material, suggestions, userID, ngoID, brandID]);
 
         // Delete from donation table
         const result2 = await Qexecution.queryExecute(DeleteSQL, [donationID]);
