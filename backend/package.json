@@ -1,4 +1,17 @@
 {
+
+  "name": "backend",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js",
+    "build": "echo \"No build step required\"",
+    "dev": "nodemon index.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": "",
     "name": "backend",
     "version": "1.0.0",
     "main": "final.js",
@@ -25,4 +38,5 @@
         "nodemailer": "^6.9.16",
         "nodemon": "^3.1.9"
     }
+
 }
