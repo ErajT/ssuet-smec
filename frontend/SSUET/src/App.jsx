@@ -12,6 +12,7 @@ import Landing from "./components/Landing";
 import User from "./components/User";
 import DonateMore from "./components/DonateMore";
 import BrandsPage from "./components/BrandsPage";
+import SignUp from "./components/Signup";
 
 const GlobalStyle = createGlobalStyle`
   * {
@@ -53,6 +54,7 @@ const App = () => {
           <Route path="/User" element={<User/>} />
           <Route path="/donate-more" element={<DonateMore/>} />
           <Route path="/Brands" element={<BrandsPage/>} />
+          <Route path="/signup" element={<SignUp/>} />
           {/* Add more routes here */}
         </Routes>
       </AppContainer>

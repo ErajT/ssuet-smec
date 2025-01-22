@@ -3,6 +3,9 @@ const express= require('express')
 
 const router = express.Router();
 
+router.route('/addNGO')
+    .post(NGOHandler.addNGO);
+
 router.route('/addDeserving')
     .post(NGOHandler.addDeserving);
 
@@ -18,7 +21,7 @@ router.route('/getDonation/:ngoID/:brandID')
 router.route('/getDonated/:ngoID/:brandID')
     .get(NGOHandler.getDonated);
 
-router.route('/getDiscarded')
+router.route('/getDiscarded/:ngoID/:brandID')
     .get(NGOHandler.getDiscarded);
 
 router.route('/addDonation')

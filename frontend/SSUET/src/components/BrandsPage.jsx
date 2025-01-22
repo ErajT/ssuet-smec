@@ -1,30 +1,67 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import Cookies from "js-cookie";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import CardMedia from "@mui/material/CardMedia";
 import Typography from "@mui/material/Typography";
 import Grid from "@mui/material/Grid";
 import Container from "@mui/material/Container";
+import CircularProgress from "@mui/material/CircularProgress";
+import Alert from "@mui/material/Alert";
 
 const BrandsPage = () => {
-  // Static data for brands
-  const brands = [
-    {
-      brandID: 1,
-      brandImage: "https://i.dawn.com/primary/2022/01/61e66fbaa8fdb.png", // Replace with your image URLs
-      brandName: "Khaadi",
-    },
-    {
-      brandID: 2,
-      brandImage: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSHqtDj0kSBxDkSlqUoy7QwJHWgTHOhHo6BsA&s",
-      brandName: "J.",
-    },
-    {
-      brandID: 3,
-      brandImage: "https://tufailgroup.com/wp-content/uploads/2017/01/gul-ahmed-textiles.png",
-      brandName: "Gul Ahmed",
-    },
-  ];
+  const [brands, setBrands] = useState([]); // State to hold fetched brands
+  const [loading, setLoading] = useState(true); // State to manage loading
+  const [error, setError] = useState(null); // State to manage errors
+  const navigate = useNavigate(); // React Router's navigation hook
+
+  useEffect(() => {
+    // Fetch brands from the API
+    const fetchBrands = async () => {
+      try {
+        const response = await fetch("http://localhost:2000/Users/getAllBrands/");
+        if (!response.ok) {
+          throw new Error("Failed to fetch brands");
+        }
+        const result = await response.json();
+        setBrands(result.data); // Set brands data
+      } catch (err) {
+        setError(err.message); // Set error if any
+      } finally {
+        setLoading(false); // Stop loading spinner
+      }
+    };
+
+    fetchBrands();
+  }, []);
+
+  const handleCardClick = (brand) => {
+    // Save brand details in a cookie
+    Cookies.set("selectedBrand", JSON.stringify(brand)); // Expires in 1 day
+
+    // Navigate to /ngotable
+    navigate("/ngotable");
+  };
+
+  if (loading) {
+    return (
+      <Container sx={{ marginTop: 4, textAlign: "center" }}>
+        <CircularProgress />
+        <Typography variant="h6" sx={{ marginTop: 2 }}>
+          Loading brands...
+        </Typography>
+      </Container>
+    );
+  }
+
+  if (error) {
+    return (
+      <Container sx={{ marginTop: 4 }}>
+        <Alert severity="error">{error}</Alert>
+      </Container>
+    );
+  }
 
   return (
     <Container sx={{ marginTop: 4 }}>
@@ -39,20 +76,46 @@ const BrandsPage = () => {
       <Grid container spacing={4}>
         {brands.map((brand) => (
           <Grid item xs={12} sm={6} md={4} key={brand.brandID}>
-            <Card sx={{ maxWidth: 345, margin: "0 auto" }}>
+            <Card
+              sx={{ maxWidth: 345, margin: "0 auto", cursor: "pointer" }}
+              onClick={() => handleCardClick(brand)} // Handle card click
+            >
               <CardMedia
-                sx={{ height: 140, objectFit: "contain", // Ensures the image fits within the container
-                    backgroundSize: "contain", // Ensures no overflow
-                    backgroundPosition: "center", // Centers the image
-                    backgroundRepeat: "no-repeat", }}
-                image={brand.brandImage} // Static image
-                title={brand.brandName} // Brand name as title
+                sx={{
+                  height: 140,
+                  objectFit: "contain",
+                  backgroundSize: "contain",
+                  backgroundPosition: "center",
+                  backgroundRepeat: "no-repeat",
+                }}
+                image={
+                  brand.Image
+                    ? brand.Image
+                    : "https://via.placeholder.com/140x100?text=No+Image"
+                } // Handle null images
+                title={brand.brandName}
               />
-              <CardContent>
-                <Typography gutterBottom variant="h5" component="div">
-                  {brand.brandName} {/* Static brand name */}
-                </Typography>
-              </CardContent>
+              <CardContent
+              sx={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                height: "60px", // Adjust as needed to ensure the content area has enough height
+              }}
+            >
+              <Typography
+                gutterBottom
+                variant="h5"
+                component="div"
+                sx={{
+                  textAlign: "center", // Centers text within its container
+                  fontWeight: "bold", // Optional: makes the text more prominent
+                }}
+              >
+                {brand.brandName}
+              </Typography>
+            </CardContent>
+
             </Card>
           </Grid>
         ))}

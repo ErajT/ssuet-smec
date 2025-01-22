@@ -1,5 +1,28 @@
 const Qexecution = require("./query");
 
+exports.addNGO = async (req, res) => {
+    const SQL = "INSERT INTO ngo(ngoname, location, email) VALUES ?";
+
+    try{
+        const {name, location, email} = req.body;
+
+        const result = await Qexecution.queryExecute(SQL, [name,location, email]);
+        
+        res.status(200).send({
+            status: "success",
+            message: "NGOs fetched successfully.",
+            data: result,
+        });
+    } catch (err) {
+        console.error("Error fetching NGOs:", err.message);
+        res.status(500).send({
+            status: "fail",
+            message: "Error fetching NGOs.",
+            error: err.message,
+        });
+    }
+};
+
 exports.addDeserving = async (req, res) => {
     // Define the SQL query to insert into the deserving table
     const InsertSQL = "INSERT INTO deserving(name, ageGroup, gender, phoneNo, ngoID) VALUES (?, ?, ?, ?, ?)";
@@ -116,11 +139,11 @@ exports.getDonations = async (req, res) => {
 
 exports.getDonated = async (req, res) => {
     const GetSQL = `
-        SELECT donated.*, users.name AS donatedBy, deserving.name AS donatedTo
+        SELECT donated.*, user.name AS donatedBy, deserving.name AS donatedTo
         FROM donated
-        JOIN users ON donated.userID = users.userID
+        JOIN user ON donated.userID = user.userID
         JOIN deserving ON donated.deservingID = deserving.deservingID
-        WHERE ngoID=? AND brandID=?
+        WHERE donated.ngoID=? AND donated.brandID=?
     `;
     
     try {
@@ -144,13 +167,15 @@ exports.getDonated = async (req, res) => {
 
 exports.getDiscarded = async (req, res) => {
     const GetSQL = `
-        SELECT discarded.*, users.name AS userName
+        SELECT discarded.*, user.name AS userName
         FROM discarded
-        JOIN users ON discarded.userID = users.userID
+        JOIN user ON discarded.userID = user.userID
+        WHERE discarded.ngoID=? AND discarded.brandID=?
     `;
     
     try {
-        const result = await Qexecution.queryExecute(GetSQL, []);
+        const {ngoID, brandID} = req.params;
+        const result = await Qexecution.queryExecute(GetSQL, [ngoID, brandID]);
         
         res.status(200).send({
             status: "success",
@@ -167,6 +192,7 @@ exports.getDiscarded = async (req, res) => {
     }
 };
 
+
 exports.addDiscarded = async (req, res) => {
     const SelectSQL = "SELECT clothName, material, userID FROM donation WHERE donationID = ?";
     const InsertSQL = "INSERT INTO discarded(clothName, material, suggestions, userID) VALUES (?, ?, ?, ?)";
@@ -177,6 +203,7 @@ exports.addDiscarded = async (req, res) => {
 
         // Fetch the donation details
         const donationDetails = await Qexecution.queryExecute(SelectSQL, [donationID]);
+        console.log(donationDetails[0].clothName, donationDetails[0].material);
         if (donationDetails.length === 0) {
             return res.status(404).send({
                 status: "fail",
@@ -311,6 +338,6 @@ exports.getDetails = async (req, res) => {
 }
 
 exports.genAI = async (req, res) => {
-    
+
 }
 
