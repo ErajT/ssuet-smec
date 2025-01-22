@@ -195,6 +195,34 @@ exports.getDiscarded = async (req, res) => {
     }
 };
 
+// Function to summarize comments
+const aiSuggestions = async (clothName, material) => {
+    try {
+        const response = await client.chat.completions.create({
+            messages: [
+                {
+                    role: 'user',
+                    content: `Based on the discarded clothing item ${clothName} made of ${material}, provide a professional and concise suggestion on how it can be recycled or repurposed into other products while ensuring eco-friendliness and minimal environmental impact. Focus on actionable recycling or repurposing methods tailored to the material and avoid unnecessary details.`,
+                },
+            ],
+            model: 'llama3.1-8b',
+        });
+
+        // Extract the summary content
+        const suggestions = response.choices?.[0]?.message?.content;
+
+        if (!suggestions) {
+            throw new Error('Failed to generate suggestions');
+        }
+
+        return suggestions;
+    } catch (error) {
+        console.error('Error generating suggestions', error.message);
+        throw new Error('Error generating suggestions');
+    }
+};
+
+
 exports.addDiscarded = async (req, res) => {
     const SelectSQL = "SELECT clothName, material, userID, ngoID, brandID FROM donation WHERE donationID = ?";
     const InsertSQL = "INSERT INTO discarded(clothName, material, suggestions, userID, ngoID, brandID) VALUES (?, ?, ?, ?, ?, ?)";
@@ -206,6 +234,10 @@ exports.addDiscarded = async (req, res) => {
         // Fetch the donation details
         const donationDetails = await Qexecution.queryExecute(SelectSQL, [donationID]);
         console.log(donationDetails[0].clothName, donationDetails[0].material);
+
+        const suggestions = await aiSuggestions(donationDetails[0].clothName, donationDetails[0].material);
+        console.log(suggestions);
+
         if (donationDetails.length === 0) {
             return res.status(404).send({
                 status: "fail",
