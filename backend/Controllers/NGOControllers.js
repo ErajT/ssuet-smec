@@ -284,3 +284,29 @@ exports.addDonation = async (req, res) => {
     }
 };
 
+exports.getDetails = async (req, res) => {
+        const GetSQL = "SELECT * FROM ngo WHERE email = ?";
+    
+        try {
+            // Extract userID from request parameters
+            const { email } = req.params;
+    
+            // Execute the query with the userID
+            const result = await Qexecution.queryExecute(GetSQL, [email]);
+    
+            // Respond with the fetched data
+            res.status(200).send({
+                status: "success",
+                message: "Details for the user fetched successfully.",
+                data: result,
+            });
+        } catch (err) {
+            console.error("Error fetching details for the user:", err.message);
+            res.status(500).send({
+                status: "fail",
+                message: "Error fetching details for the user.",
+                error: err.message,
+            });
+        }
+}
+

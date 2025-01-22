@@ -13,7 +13,10 @@ router.route('/addPending')
     .post(UserHandler.addPending);
 
 router.route('/getDonations/:userID')
-    .get(UserHandler.getDonationsByUser)
+    .get(UserHandler.getDonationsByUser);
+
+router.route('/getDetails/:email')
+    .get(UserHandler.getDetails);
 
     
 module.exports = router

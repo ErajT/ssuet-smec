@@ -17,7 +17,7 @@ module.exports= {
                 } else {
                     // Insert the new user
                     pool.query(
-                        `insert into registration(email, password, position, id, Allowed) values(?,?,?,?,?)`,
+                        `insert into registration(email, password, position, id) values(?,?,?,?)`,
                         [data.email, data.password, data.position, data.id, 1],
                         (error, results) => {
                             if (error) {
@@ -31,9 +31,9 @@ module.exports= {
         );        
     },
     getUserByEmail: async (email,callBack)=>{
-        const SQL= "SELECT * FROM registration where email= ? AND Allowed = ?";
+        const SQL= "SELECT * FROM registration where email= ?";
         try{
-            const result=await Qexecution.queryExecute(SQL,[email, 1]);
+            const result=await Qexecution.queryExecute(SQL,[email]);
             return callBack(null,result[0]);
         }catch(err){
             return callBack(err);

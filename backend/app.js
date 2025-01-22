@@ -4,6 +4,7 @@ const bodyParser = require('body-parser');
 
 const UserRoutes = require('./Routers/UserRouters');
 const NGORoutes = require('./Routers/NGORouters');
+const userRouter = require('./api/user/user.router');
 
 let app = express();
 app.options('*', cors()); // Allow preflight requests
@@ -31,6 +32,7 @@ app.use(bodyParser.urlencoded({ limit: '200mb', extended: true }));
 //middleware for request body
 app.use(express.json());
 app.use('/Users', UserRoutes);
+app.use('/user', userRouter);
 app.use('/NGO', NGORoutes);
 
 module.exports = app;

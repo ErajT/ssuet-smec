@@ -30,5 +30,8 @@ router.route('/addDonated')
 router.route('/addDiscarded')
     .post(NGOHandler.addDiscarded);
 
+router.route('/getDetails/:email')
+    .get(NGOHandler.getDetails);
+
     
 module.exports = router
