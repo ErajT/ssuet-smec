@@ -91,8 +91,9 @@ const InputContainer = styled.div`
 const Input = styled.input`
   background-color: #eee;
   border: none;
+  color: #2b6777;
   padding: 12px 15px;
-  width: 100%;
+  width: 90%;
 `;
 
 const Button = styled.button`
@@ -206,8 +207,8 @@ const Login = () => {
 
     try {
       // console.log(`${backendUrl}/users/login`);
-      const response = await axios.post(`${backendUrl}/users/login`,
-         {
+      const response = await axios.post(`${backendUrl}/user/login`,
+        {
         email: email,
         password: password,
       });
@@ -224,53 +225,81 @@ const Login = () => {
         setSnackbarSeverity("success");
         setSnackbarOpen(true);
 
-    //     if(position == "trainee")
-    //     {
-    //       Cookies.set("position", JSON.stringify("trainee"));
-    //     // Second API call to fetch trainee details
-    //     // console.log(`${backendUrl}/leaderboard/getDetails/${email}`);
-    //     const tok = Cookies.get("token");
-    //     const token = JSON.parse(tok);
-    //     // console.log(token);
-    //     const traineeDetailsResponse = await axios.get(
-    //       `${backendUrl}/leaderboard/getDetails/${email}`,
-    //       {
-    //         headers: {
-    //           Authorization: `Bearer ${token}`
-    //         }
-    //       }
-    //     );
-    //     if (traineeDetailsResponse.status === 200) {
-    //       // Store trainee details in a cookie
-    //       // console.log(traineeDetailsResponse.data.data);
-    //       Cookies.set("traineeDetails1", JSON.stringify(traineeDetailsResponse.data.data), {
-    //         expires: 7, // Cookie will expire in 7 days
-    //         secure: true, // Ensure secure cookie usage in HTTPS
-    //       });
+        if(position == "user")
+        {
+          Cookies.set("position", JSON.stringify("user"));
+        // Second API call to fetch trainee details
+        // console.log(`${backendUrl}/leaderboard/getDetails/${email}`);
+        const tok = Cookies.get("token");
+        const token = JSON.parse(tok);
+        // console.log(token);
+        const DetailsResponse = await axios.get(
+          `${backendUrl}/Users/getDetails/${email}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          }
+        );
+        if (DetailsResponse.status === 200) {
+          // Store trainee details in a cookie
+          // console.log(traineeDetailsResponse.data.data);
+          Cookies.set("userDetails", JSON.stringify(DetailsResponse.data.data), {
+            expires: 7, // Cookie will expire in 7 days
+            secure: true, // Ensure secure cookie usage in HTTPS
+          });
 
-    //       setSnackbarMessage("Login successful!");
-    //       setSnackbarSeverity("success");
-    //       setSnackbarOpen(true);
+          setSnackbarMessage("Login successful!");
+          setSnackbarSeverity("success");
+          setSnackbarOpen(true);
         
-    //     }
-    //     else{
-    //       throw new Error("Login not allowed.");
-    //     }
+        }
+        else{
+          throw new Error("Login not allowed.");
+        }
         
-    //     setTimeout(() => {
-    //       window.location.href = "/ParticipantHome"; // Redirect on success
-    //     }, 1500);
-    //   }
-    //   else if(position == "admin")
-    //   {
-    //     Cookies.set("position", JSON.stringify("admin"));
-    //     setSnackbarMessage("Login successful!");
-    //     setSnackbarSeverity("success");
-    //     setSnackbarOpen(true);
-    //     setTimeout(() => {
-    //       window.location.href = "/admin"; // Redirect on success
-    //     }, 1500);
-    //   }
+        setTimeout(() => {
+          window.location.href = "/User"; // Redirect on success
+        }, 1500);
+      }
+      else if(position == "ngo")
+      {
+        Cookies.set("position", JSON.stringify("ngo"));
+        setSnackbarMessage("Login successful!");
+        setSnackbarSeverity("success");
+        setSnackbarOpen(true);
+        const tok = Cookies.get("token");
+        const token = JSON.parse(tok);
+        // console.log(token);
+        const DetailsResponse = await axios.get(
+          `${backendUrl}/NGO/getDetails/${email}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          }
+        );
+        if (DetailsResponse.status === 200) {
+          // Store trainee details in a cookie
+          // console.log(traineeDetailsResponse.data.data);
+          Cookies.set("ngoDetails", JSON.stringify(DetailsResponse.data.data), {
+            expires: 7, // Cookie will expire in 7 days
+            secure: true, // Ensure secure cookie usage in HTTPS
+          });
+
+          setSnackbarMessage("Login successful!");
+          setSnackbarSeverity("success");
+          setSnackbarOpen(true);
+        
+        }
+        else{
+          throw new Error("Login not allowed.");
+        }
+        
+        setTimeout(() => {
+          window.location.href = "/Brands"; // Redirect on success
+        }, 1500);
+      }
       } else {
         throw new Error("Login failed.");
       }
