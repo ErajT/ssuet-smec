@@ -82,6 +82,12 @@ const Title = styled.h1`
   color: #2b6777;
 `;
 
+const Title1 = styled.h2`
+  font-weight: bold;
+  margin: 0;
+  color: #f0f8f7;
+`;
+
 const InputContainer = styled.div`
   position: relative;
   width: 100%;
@@ -101,6 +107,27 @@ const Button = styled.button`
   border: 1px solid #2b6777;
   background-color: #2b6777;
   color: #f0f8f7;
+  font-size: 12px;
+  font-weight: bold;
+  padding: 12px 45px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  transition: transform 80ms ease-in;
+  
+  &:active {
+    transform: scale(0.95);
+  }
+
+  &:focus {
+    outline: none;
+  }
+`;
+
+const Button1 = styled.button`
+  border-radius: 20px;
+  border: 1px solid #2b6777;
+  background-color: #f0f8f7;
+  color: #2b6777;
   font-size: 12px;
   font-weight: bold;
   padding: 12px 45px;
@@ -345,10 +372,11 @@ const Login = () => {
         <OverlayContainer>
           <Overlay>
             <OverlayPanel>
-              <Title>Welcome Back!</Title>
+              <Title1>Welcome Back!</Title1>
               <Paragraph>
-                To keep connected with us, please login with your personal info
+                New here? Sign up for an account
               </Paragraph>
+              <Button1 onClick={() => window.location.href = "/signup"}>Sign Up</Button1>
             </OverlayPanel>
           </Overlay>
         </OverlayContainer>

@@ -5,7 +5,7 @@ const connection=mysql.createPool({
     connectionLimit: 6,
     host: "127.0.0.1",
     user: "root",
-    password: "rootpassword",
+    password: "root",
     database: "ssuet",
     port: 3306,
     ssl: false

@@ -2,6 +2,30 @@ const Qexecution = require("./query");
 require('dotenv').config(); // Ensure dotenv is loaded for environment variables
 const Cerebras = require('@cerebras/cerebras_cloud_sdk');
 
+exports.addNGO = async (req, res) => {
+    const SQL = "INSERT INTO ngo(ngoname, location, email) VALUES ?";
+
+    try{
+        const {name, location, email} = req.body;
+
+        const result = await Qexecution.queryExecute(SQL, [name,location, email]);
+        
+        res.status(200).send({
+            status: "success",
+            message: "NGOs fetched successfully.",
+            data: result,
+        });
+    } catch (err) {
+        console.error("Error fetching NGOs:", err.message);
+        res.status(500).send({
+            status: "fail",
+            message: "Error fetching NGOs.",
+            error: err.message,
+        });
+    }
+};
+
+
 exports.addDeserving = async (req, res) => {
     // Define the SQL query to insert into the deserving table
     const InsertSQL = "INSERT INTO deserving(name, ageGroup, gender, phoneNo, ngoID) VALUES (?, ?, ?, ?, ?)";
@@ -118,11 +142,11 @@ exports.getDonations = async (req, res) => {
 
 exports.getDonated = async (req, res) => {
     const GetSQL = `
-        SELECT donated.*, users.name AS donatedBy, deserving.name AS donatedTo
+        SELECT donated.*, user.name AS donatedBy, deserving.name AS donatedTo
         FROM donated
-        JOIN users ON donated.userID = users.userID
+        JOIN user ON donated.userID = user.userID
         JOIN deserving ON donated.deservingID = deserving.deservingID
-        WHERE ngoID=? AND brandID=?
+        WHERE donated.ngoID=? AND donated.brandID=?
     `;
 
     try {
@@ -146,14 +170,15 @@ exports.getDonated = async (req, res) => {
 
 exports.getDiscarded = async (req, res) => {
     const GetSQL = `
-        SELECT discarded.*, users.name AS userName
+        SELECT discarded.*, user.name AS userName
         FROM discarded
-        JOIN users ON discarded.userID = users.userID
+        JOIN user ON discarded.userID = user.userID
+        WHERE discarded.ngoID=? AND discarded.brandID=?
     `;
 
     try {
         const result = await Qexecution.queryExecute(GetSQL, []);
-
+        
         res.status(200).send({
             status: "success",
             message: "Discarded records fetched successfully.",
@@ -169,41 +194,9 @@ exports.getDiscarded = async (req, res) => {
     }
 };
 
-// Initialize the Cerebras client
-const client = new Cerebras({
-    apiKey: process.env.API_KEY,
-});
-
-// Function to summarize comments
-const aiSuggestions = async (clothName, material) => {
-    try {
-        const response = await client.chat.completions.create({
-            messages: [
-                {
-                    role: 'user',
-                    content: `Based on the discarded clothing item ${clothName} made of ${material}, provide a professional and concise suggestion on how it can be recycled or repurposed into other products while ensuring eco-friendliness and minimal environmental impact. Focus on actionable recycling or repurposing methods tailored to the material and avoid unnecessary details.`,
-                },
-            ],
-            model: 'llama3.1-8b',
-        });
-
-        // Extract the summary content
-        const suggestions = response.choices?.[0]?.message?.content;
-
-        if (!suggestions) {
-            throw new Error('Failed to generate suggestions');
-        }
-
-        return suggestions;
-    } catch (error) {
-        console.error('Error generating suggestions', error.message);
-        throw new Error('Error generating suggestions');
-    }
-};
-
 exports.addDiscarded = async (req, res) => {
-    const SelectSQL = "SELECT clothName, material, userID FROM donation WHERE donationID = ?";
-    const InsertSQL = "INSERT INTO discarded(clothName, material, suggestions, userID) VALUES (?, ?, ?, ?)";
+    const SelectSQL = "SELECT clothName, material, userID, ngoID, brandID FROM donation WHERE donationID = ?";
+    const InsertSQL = "INSERT INTO discarded(clothName, material, suggestions, userID, ngoID, brandID) VALUES (?, ?, ?, ?, ?, ?)";
     const DeleteSQL = "DELETE FROM donation WHERE donationID = ?";
 
     try {
@@ -211,6 +204,7 @@ exports.addDiscarded = async (req, res) => {
 
         // Fetch the donation details
         const donationDetails = await Qexecution.queryExecute(SelectSQL, [donationID]);
+        console.log(donationDetails[0].clothName, donationDetails[0].material);
         if (donationDetails.length === 0) {
             return res.status(404).send({
                 status: "fail",
@@ -220,7 +214,6 @@ exports.addDiscarded = async (req, res) => {
 
         // Insert into discarded table
         const { clothName, material, userID } = donationDetails[0];
-        const suggestions = await aiSuggestions(clothName, material);
         const result = await Qexecution.queryExecute(InsertSQL, [clothName, material, suggestions, userID]);
 
         // Delete from donation table
@@ -343,5 +336,9 @@ exports.getDetails = async (req, res) => {
             error: err.message,
         });
     }
+}
+
+exports.genAI = async (req, res) => {
+    
 }
 
