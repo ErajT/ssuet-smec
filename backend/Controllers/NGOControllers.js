@@ -310,3 +310,7 @@ exports.getDetails = async (req, res) => {
         }
 }
 
+exports.genAI = async (req, res) => {
+    
+}
+
