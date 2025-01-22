@@ -35,4 +35,8 @@ app.use('/Users', UserRoutes);
 app.use('/user', userRouter);
 app.use('/NGO', NGORoutes);
 
+app.listen(2000,()=>{
+  console.log("Server has started");
+})
+
 module.exports = app;
