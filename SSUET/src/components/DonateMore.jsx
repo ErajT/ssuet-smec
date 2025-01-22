@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import cookie from "js-cookie";
 import {
   Container,
   Box,
@@ -9,6 +10,9 @@ import {
   InputLabel,
   FormControl,
   Slider,
+  TextField,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 
@@ -24,16 +28,39 @@ const DonateMore = () => {
     clothName: "",
     condition: 3,
     image: null,
+    mode: "",  // New field for mode (pickup or delivery)
   });
 
-  const [ngos, setNgos] = useState(["JDC", "Saylani"]);
+  const [ngos, setNgos] = useState([]);
+  const [brands, setBrands] = useState([]);
 
-  const [brands, setBrands] = useState(["Khaddi", "J.", "Gul Ahmed", "Bonanza Satrangi", "Sana Safinaz"]);
+  // State for Snackbar
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState("success"); // "success" or "error"
 
-  const [gender, setGender] = useState(["Male", "Female"]);
-  const [age, setAge] = useState(["0-5", "6-10", "11-20", "21-35"]);
-  const [material, setMaterial] = useState(["Cotton", "Wool"]);
-  const [clothName, setClothName] = useState(["Shirt", "Sweater", "Pant", "Trouser", "Socks", "Others"]);
+  // Fetch NGOS and Brands on component mount
+  useEffect(() => {
+    // Fetch NGOs
+    fetch("http://localhost:2000/Users/getAllNGOs")
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.status === "success") {
+          setNgos(data.data);
+        }
+      })
+      .catch((error) => console.error("Error fetching NGOs:", error));
+
+    // Fetch Brands
+    fetch("http://localhost:2000/Users/getAllBrands")
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.status === "success") {
+          setBrands(data.data);
+        }
+      })
+      .catch((error) => console.error("Error fetching Brands:", error));
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -50,8 +77,54 @@ const DonateMore = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log("Form Data Submitted:", formData);
-    navigate("/User"); // Navigate to the User page after submission
+
+    const { clothName, brand, ageGroup, gender, condition, material, donateTo, image, mode } = formData;
+    const user = cookie.get("userDetails");
+    const user1 = JSON.parse(user);
+    const userID = user1[0].userID;
+    
+    const donationData = {
+      clothName,
+      brandID: brands.find((brandItem) => brandItem.brandName === brand)?.brandID,
+      ageGroup,
+      gender,
+      condition,
+      material,
+      ngoID: ngos.find((ngoItem) => ngoItem.ngoName === donateTo)?.ngoID,
+      userID: userID, 
+      picture: image ? image.name : "",
+      status: "Pending",
+      mode, 
+    };
+
+    // Submit donation data
+    fetch("http://localhost:2000/Users/addPending", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(donationData),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.status === "success") {
+          setSnackbarMessage("Donation request submitted successfully!");
+          setSnackbarSeverity("success");
+          setSnackbarOpen(true);
+          window.scrollTo(0, 0);
+          navigate("/User");
+        }
+      })
+      .catch((error) => {
+        setSnackbarMessage("Error submitting donation.");
+        setSnackbarSeverity("error");
+        setSnackbarOpen(true);
+        console.error("Error submitting donation:", error);
+      });
+  };
+
+  const handleSnackbarClose = () => {
+    setSnackbarOpen(false);
   };
 
   return (
@@ -63,6 +136,7 @@ const DonateMore = () => {
         borderRadius: "8px",
         backgroundColor: "#f9f9f9",
         boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)",
+        overflowY: "auto",
       }}
     >
       <Typography
@@ -82,15 +156,14 @@ const DonateMore = () => {
             onChange={handleChange}
             required
           >
-            {ngos.map(
-              (option) => (
-                <MenuItem key={option} value={option}>
-                  {option}
-                </MenuItem>
-              )
-            )}
+            {ngos.map((ngo) => (
+              <MenuItem key={ngo.ngoID} value={ngo.ngoName}>
+                {ngo.ngoName}
+              </MenuItem>
+            ))}
           </Select>
         </FormControl>
+
         {/* Brand */}
         <FormControl fullWidth sx={{ marginBottom: "15px" }}>
           <InputLabel>Brand</InputLabel>
@@ -100,13 +173,11 @@ const DonateMore = () => {
             onChange={handleChange}
             required
           >
-            {brands.map(
-              (option) => (
-                <MenuItem key={option} value={option}>
-                  {option}
-                </MenuItem>
-              )
-            )}
+            {brands.map((brand) => (
+              <MenuItem key={brand.brandID} value={brand.brandName}>
+                {brand.brandName}
+              </MenuItem>
+            ))}
           </Select>
         </FormControl>
 
@@ -119,9 +190,9 @@ const DonateMore = () => {
             onChange={handleChange}
             required
           >
-            {gender.map((option) => (
-              <MenuItem key={option} value={option}>
-                {option}
+            {["Male", "Female"].map((genderOption) => (
+              <MenuItem key={genderOption} value={genderOption}>
+                {genderOption}
               </MenuItem>
             ))}
           </Select>
@@ -136,47 +207,50 @@ const DonateMore = () => {
             onChange={handleChange}
             required
           >
-            {age.map((option) => (
-              <MenuItem key={option} value={option}>
-                {option}
+            {["0-5", "6-10", "11-20", "21-35"].map((ageOption) => (
+              <MenuItem key={ageOption} value={ageOption}>
+                {ageOption}
               </MenuItem>
             ))}
           </Select>
         </FormControl>
 
-        {/* Material */}
+        {/* Material (Text Field) */}
+        <TextField
+          label="Material"
+          name="material"
+          value={formData.material}
+          onChange={handleChange}
+          fullWidth
+          required
+          sx={{ marginBottom: "15px" }}
+        />
+
+        {/* Cloth Name (Text Field) */}
+        <TextField
+          label="Cloth Name"
+          name="clothName"
+          value={formData.clothName}
+          onChange={handleChange}
+          fullWidth
+          required
+          sx={{ marginBottom: "15px" }}
+        />
+
+        {/* Mode (Pickup or Delivery) */}
         <FormControl fullWidth sx={{ marginBottom: "15px" }}>
-          <InputLabel>Material</InputLabel>
+          <InputLabel>Mode</InputLabel>
           <Select
-            name="material"
-            value={formData.material}
+            name="mode"
+            value={formData.mode}
             onChange={handleChange}
             required
           >
-            {material.map((option) => (
-              <MenuItem key={option} value={option}>
-                {option}
+            {["Pickup", "Delivery"].map((modeOption) => (
+              <MenuItem key={modeOption} value={modeOption}>
+                {modeOption}
               </MenuItem>
             ))}
-          </Select>
-        </FormControl>
-
-        {/* Cloth Name */}
-        <FormControl fullWidth sx={{ marginBottom: "15px" }}>
-          <InputLabel>Cloth Name</InputLabel>
-          <Select
-            name="clothName"
-            value={formData.clothName}
-            onChange={handleChange}
-            required
-          >
-            {clothName.map(
-              (option) => (
-                <MenuItem key={option} value={option}>
-                  {option}
-                </MenuItem>
-              )
-            )}
           </Select>
         </FormControl>
 
@@ -221,6 +295,21 @@ const DonateMore = () => {
           Donate Now
         </Button>
       </form>
+
+      {/* Snackbar */}
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={6000}
+        onClose={handleSnackbarClose}
+      >
+        <Alert
+          onClose={handleSnackbarClose}
+          severity={snackbarSeverity}
+          sx={{ width: "100%" }}
+        >
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </Container>
   );
 };
