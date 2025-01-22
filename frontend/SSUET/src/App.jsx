@@ -44,7 +44,7 @@ const App = () => {
       <AppContainer>
         <Routes>
         {/* <Route path="/" element={<Landing />} /> */}
-          <Route path="/header" element={<Header />} />
+          <Route path="/" element={<Landing />} />
           <Route path="/deserving" element={<Deservinginfo />} />
           <Route path="/ngotable" element={<Ngotable />} />
           <Route path="/status" element={<Status/>} />
