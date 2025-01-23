@@ -14,6 +14,7 @@ const SignUpContainer = styled.div`
   width: 90%;
   max-width: 800px;
   height: auto;
+  overflow-y: auto; /* Enable vertical scrolling */
 `;
 
 const Title = styled.h2`
@@ -81,6 +82,7 @@ const SignUp = () => {
   };
 
   const submitUserForm = () => {
+    console.log(userData);
     fetch(`https://api.example.com/createUser`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

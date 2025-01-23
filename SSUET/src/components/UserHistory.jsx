@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
     Container,
     Button,
@@ -13,49 +13,79 @@ import {
     Typography,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
+import Cookies from "js-cookie";
 
 const UserHistory = () => {
     const navigate = useNavigate();
-    const clothesData = [
-        {
-            id: 1,
-            donateTo: "Charity A",
-            gender: "Male",
-            ageGroup: "Adult",
-            material: "Cotton",
-            clothName: "Shirt",
-            condition: "New",
-            status: "completed",
-            action: "Donate",
-            image: "Images/shirt.jpg",
-        },
-        {
-            id: 2,
-            donateTo: "Charity B",
-            gender: "Female",
-            ageGroup: "Child",
-            material: "Wool",
-            clothName: "Sweater",
-            condition: "Used",
-            status: "pending",
-            action: "Donate",
-            image: "Images/sweater.jpg",
-        },
-    ];
+    const [clothesData, setClothesData] = useState([]);
+    const userDetails = Cookies.get("userDetails")
+        ? JSON.parse(Cookies.get("userDetails"))
+        : null;
+        console.log(userDetails)
+    const userID = userDetails[0]?.userID; // Extract userID from the cookie
+
+    // Function to fetch the data from the API
+    const fetchData = async () => {
+        try {
+            // Fetch the API endpoint for user donations
+            const response = await fetch(`http://localhost:2000/Users/getDonations/${userID}`);
+
+            // Parse the response
+            const data = await response.json();
+
+            if (data.status === "success") {
+                const combinedData = [
+                    ...data.data.pending.map((item) => ({
+                        ...item,
+                        status: "Pending",
+                        action: "Donate",
+                    })),
+                    ...data.data.donation.map((item) => ({
+                        ...item,
+                        status: "Not donated yet",
+                        action: "Donate",
+                    })),
+                    ...data.data.donated.map((item) => ({
+                        ...item,
+                        status: "Donated",
+                        action: "View Details",
+                    })),
+                ];
+
+                // Update the state with the combined data
+                setClothesData(combinedData);
+            } else {
+                console.error("Error fetching data:", data.message);
+            }
+        } catch (error) {
+            console.error("Error fetching data:", error);
+        }
+    };
+
+    useEffect(() => {
+        // Auto scroll to the top when the component mounts
+        window.scrollTo(0, 0);
+
+        // Fetch donation data
+        if (userID) {
+            fetchData();
+        } else {
+            console.error("No userID found in cookies.");
+        }
+    }, [userID]);
 
     const handleSubmit = () => {
-        navigate("/donate-more"); // This will navigate to the /donate-more route
-      };
+        navigate("/donate-more"); // Navigate to the /donate-more route
+    };
 
     return (
         <Container
             sx={{
                 marginTop: 4,
-                // backgroundColor: "#f2f2f2", // Light grey background
                 padding: 2,
                 borderRadius: 2,
-                maxHeight: "100vh",
-                // overflowY: "auto", // Allows vertical scrolling
+                overflowY: "auto", // Enable vertical scrolling
+                height: "auto", // Adjust height for scrollable area
             }}
         >
             {/* Donation Record Table */}
@@ -70,7 +100,7 @@ const UserHistory = () => {
                     Your Donations
                 </Typography>
                 <TableContainer component={Paper} sx={{ backgroundColor: "#e0e0e0" }}>
-                    <Table sx={{ minWidth: 650 }} aria-label="donation record table">
+                    <Table sx={{ minWidth: 750 }} aria-label="donation record table">
                         <TableHead sx={{ backgroundColor: "#2b6777" }}>
                             <TableRow>
                                 {[
@@ -81,7 +111,6 @@ const UserHistory = () => {
                                     "Cloth Name",
                                     "Condition",
                                     "Status",
-                                    "Image",
                                 ].map((header) => (
                                     <TableCell key={header} sx={{ color: "#ffffff" }}>
                                         {header}
@@ -90,38 +119,29 @@ const UserHistory = () => {
                             </TableRow>
                         </TableHead>
                         <TableBody>
-                            {clothesData
-                                .filter((row) => row.action === "Donate" && row.donateTo)
-                                .map((row) => (
-                                    <TableRow key={row.id}>
-                                        <TableCell>{row.donateTo}</TableCell>
-                                        <TableCell>{row.gender}</TableCell>
-                                        <TableCell>{row.ageGroup}</TableCell>
-                                        <TableCell>{row.material}</TableCell>
-                                        <TableCell>{row.clothName}</TableCell>
-                                        <TableCell>{row.condition}</TableCell>
-                                        <TableCell>{row.status}</TableCell>
-                                        <TableCell>
-                                            <img
-                                                src={row.image}
-                                                alt={row.clothName}
-                                                style={{ width: 50, height: 50, borderRadius: 4 }}
-                                            />
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
+                            {clothesData.map((row, index) => (
+                                <TableRow key={index}>
+                                    <TableCell>{row.donatedTo || "N/A"}</TableCell>
+                                    <TableCell>{row.gender}</TableCell>
+                                    <TableCell>{row.ageGroup}</TableCell>
+                                    <TableCell>{row.material}</TableCell>
+                                    <TableCell>{row.clothName}</TableCell>
+                                    <TableCell>{row.conditions}</TableCell>
+                                    <TableCell>{row.status}</TableCell>
+                                </TableRow>
+                            ))}
                         </TableBody>
                     </Table>
                 </TableContainer>
             </Box>
             {/* Button to navigate to another page */}
-      <Button
-        variant="contained"
-        onClick={handleSubmit}
-        style={{ marginTop: "20px",backgroundColor: "#2b6777" }}
-      >
-        Donate More
-      </Button>
+            <Button
+                variant="contained"
+                onClick={handleSubmit}
+                style={{ marginTop: "20px", backgroundColor: "#2b6777" }}
+            >
+                Donate More
+            </Button>
         </Container>
     );
 };

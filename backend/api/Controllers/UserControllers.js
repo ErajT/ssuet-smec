@@ -68,12 +68,12 @@ exports.getAllBrands = async (req, res) => {
 
 
 exports.addPending = async (req, res) => {
-    const InsertSQL = "INSERT INTO pending(clothName, brandID, ageGroup, gender, conditions, material, ngoID, userID, picture, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    const InsertSQL = "INSERT INTO pending(clothName, brandID, ageGroup, gender, conditions, material, ngoID, userID, picture, status, mode) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
     try {
-        const { clothName, brandID, ageGroup, gender, condition, material, ngoID, userID, picture, status } = req.body;
-
-        const result = await Qexecution.queryExecute(InsertSQL, [clothName, brandID, ageGroup, gender, condition, material, ngoID, userID, picture, status]);
+        const { clothName, brandID, ageGroup, gender, condition, material, ngoID, userID, picture, status, mode } = req.body;
+        console.log(clothName, brandID, ageGroup, gender, condition, material, ngoID, userID, picture, status, mode);
+        const result = await Qexecution.queryExecute(InsertSQL, [clothName, brandID, ageGroup, gender, condition, material, ngoID, userID, picture, status, mode]);
 
         res.status(200).send({
             status: "success",
@@ -92,20 +92,34 @@ exports.addPending = async (req, res) => {
 
 
 exports.getDonationsByUser = async (req, res) => {
-    const GetSQL = "SELECT * FROM donation WHERE userID = ?";
+    const GetSQL = "SELECT * FROM pending WHERE userID = ?";
+    const GetSQL1 = "SELECT * FROM donation WHERE userID = ?";
+    const GetSQL2 = `
+        SELECT d.*, ds.name AS donatedTo
+        FROM donated d
+        JOIN deserving ds ON d.deservingID = ds.deservingID
+        WHERE d.userID = ?;
+        `;
+
 
     try {
         // Extract userID from request parameters
         const { userID } = req.params;
 
-        // Execute the query with the userID
-        const result = await Qexecution.queryExecute(GetSQL, [userID]);
+        // Execute the queries with the userID
+        const resultPending = await Qexecution.queryExecute(GetSQL, [userID]);
+        const resultDonation = await Qexecution.queryExecute(GetSQL1, [userID]);
+        const resultDonated = await Qexecution.queryExecute(GetSQL2, [userID]);
 
-        // Respond with the fetched data
+        // Respond with all results embedded in the "data" field
         res.status(200).send({
             status: "success",
             message: "Donations for the user fetched successfully.",
-            data: result,
+            data: {
+                pending: resultPending,
+                donation: resultDonation,
+                donated: resultDonated
+            },
         });
     } catch (err) {
         console.error("Error fetching donations for the user:", err.message);
@@ -116,6 +130,7 @@ exports.getDonationsByUser = async (req, res) => {
         });
     }
 };
+
 
 exports.getDetails = async (req, res) => {
     const GetSQL = "SELECT * FROM user WHERE email = ?";
