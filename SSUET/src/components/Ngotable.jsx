@@ -1,4 +1,5 @@
 import React, { useState,useEffect } from "react";
+import { useNavigate } from 'react-router-dom';
 import {
   Container,
   Table,
@@ -15,10 +16,12 @@ import {
   Box,
   Typography,
   Modal,
+  Button
 } from "@mui/material";
 import Cookies from "js-cookie";
 
 const ClothesDonationPage = () => {
+  const navigate = useNavigate();
     const [clothesData, setClothesData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [selectedImage, setSelectedImage] = useState(null);
@@ -186,11 +189,36 @@ const [discardedData, setDiscardedData] = useState([]);
         fetchDiscardedData();
       }, []);
 
-  const [donationPeople, setDonationPeople] = useState([
-    "John Smith",
-    "Emily Davis",
-    "Michael Clark",
-  ]);
+      const [donationPeople, setDonationPeople] = useState([]);
+
+      useEffect(() => {
+        // Retrieve ngoDetails from the cookie
+        const ngoDetails = Cookies.get('ngoDetails');
+        
+        // Parse the ngoDetails and get the ngoID
+        if (ngoDetails) {
+          const parsedNgoDetails = JSON.parse(ngoDetails);
+          const ngoID = parsedNgoDetails[0]?.ngoID;
+    
+          if (ngoID) {
+            // Fetch deserving individuals based on ngoID
+            fetch(`http://localhost:2000/NGO/getDeserving/${ngoID}`)
+              .then((response) => response.json())
+              .then((data) => {
+                if (data.status === 'success') {
+                  // Update the donationPeople state with names of deserving individuals
+                  const people = data.data.map((person) => person.name);
+                  setDonationPeople(people);
+                } else {
+                  console.error('Failed to fetch deserving individuals');
+                }
+              })
+              .catch((error) => {
+                console.error('Error fetching data:', error);
+              });
+          }
+        }
+      }, []);
 
   const [discardSuggestions, setDiscardSuggestions] = useState([
     "Recycle",
@@ -200,21 +228,78 @@ const [discardedData, setDiscardedData] = useState([]);
 
 //   const [selectedImage, setSelectedImage] = useState(null);
 
-  const handleActionChange = (event, id) => {
-    const updatedData = clothesData.map((item) =>
-      item.id === id
-        ? { ...item, action: event.target.value, donateTo: "" }
-        : item
-    );
-    setClothesData(updatedData);
-  };
 
-  const handleDonateToChange = (event, id) => {
-    const updatedData = clothesData.map((item) =>
-      item.id === id ? { ...item, donateTo: event.target.value } : item
-    );
-    setClothesData(updatedData);
-  };
+const handleDiscardAction = async (id) => {
+  try {
+    console.log(id);
+    const response = await fetch("http://localhost:2000/NGO/addDiscarded", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ donationID: id }), // Send donationID in the body
+    });
+
+    const result = await response.json();
+
+    if (result.status === "success") {
+      console.log(`Donation ${id} discarded successfully`);
+    } else {
+      console.error("Failed to discard item:", result.message);
+    }
+  } catch (error) {
+    console.error("Error discarding item:", error);
+  }
+};
+
+
+const handleActionChange = (event, id) => {
+  const updatedData = clothesData.map((item) =>
+    item.id === id
+      ? { ...item, action: event.target.value, donateTo: "" }
+      : item
+  );
+  setClothesData(updatedData);
+
+  if (event.target.value === "Discard") {
+    handleDiscardAction(id); // Call the discard action API
+  }
+};
+
+
+const handleDonateToChange = async (event, id) => {
+  const updatedData = clothesData.map((item) =>
+    item.id === id ? { ...item, donateTo: event.target.value } : item
+  );
+  setClothesData(updatedData);
+
+  const donationID = id;  // The donation ID is passed as the ID in the state
+  const deservingID = 5;   // Keep deservingID constant as 5
+
+  try {
+    // Make API call to add donated data
+    const response = await fetch("http://localhost:2000/NGO/addDonated", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        donationID: donationID,
+        deservingID: deservingID, // Constant deserving ID
+      }),
+    });
+
+    const result = await response.json();
+    if (result.status === "success") {
+      console.log(`Donation ${donationID} successfully added for deserving ID ${deservingID}`);
+    } else {
+      console.error("Failed to add donation:", result.message);
+    }
+  } catch (error) {
+    console.error("Error adding donation:", error);
+  }
+};
+
 
   const handleSuggestionChange = (event, id) => {
     const updatedData = clothesData.map((item) =>
@@ -229,6 +314,10 @@ const [discardedData, setDiscardedData] = useState([]);
 
   const handleCloseModal = () => {
     setSelectedImage(null);
+  };
+
+  const handleClick = () => {
+    navigate('/status');
   };
 
   return (
@@ -251,6 +340,24 @@ const [discardedData, setDiscardedData] = useState([]);
       >
         Clothes Donation Management
       </Typography>
+      <Button
+      onClick={handleClick}
+      sx={{
+        backgroundColor: '#4CAF50',
+        color: 'white',
+        padding: '12px 20px',
+        fontSize: '16px',
+        borderRadius: '4px',
+        '&:hover': {
+          backgroundColor: '#45a049',
+        },
+        '&:active': {
+          backgroundColor: '#3e8e41',
+        },
+      }}
+    >
+      Check Status
+    </Button>
 
       {/* Clothes Table */}
       <Box sx={{ marginBottom: 4 }}>
@@ -330,18 +437,7 @@ const [discardedData, setDiscardedData] = useState([]);
             </FormControl>
           ) : row.action === "Discard" ? (
             <FormControl fullWidth>
-              <InputLabel>Suggestion</InputLabel>
-              <Select
-                value={row.suggestion || ""}
-                onChange={(e) => handleSuggestionChange(e, row.id)}
-                label="Suggestion"
-              >
-                {discardSuggestions.map((suggestion, index) => (
-                  <MenuItem key={index} value={suggestion}>
-                    {suggestion}
-                  </MenuItem>
-                ))}
-              </Select>
+              
             </FormControl>
           ) : null}
         </TableCell>
