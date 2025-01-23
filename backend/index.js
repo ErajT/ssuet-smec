@@ -2,8 +2,8 @@ const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 
-const UserRoutes = require('./Routers/UserRouters');
-const NGORoutes = require('./Routers/NGORouters');
+const UserRoutes = require('./api/Routers/UserRouters');
+const NGORoutes = require('./api/Routers/NGORouters');
 const userRouter = require('./api/user/user.router');
 
 let app = express();
@@ -12,7 +12,7 @@ app.use(express.json());
 
 // Enable CORS only for your frontend origin
 const corsOptions = {
-  origin: ['http://localhost:3000', 'rewear-hub.vercel.app'],
+  origin: ['http://localhost:5173', 'rewear-hub.vercel.app'],
   methods: ['GET', 'POST', 'DELETE', 'UPDATE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 };

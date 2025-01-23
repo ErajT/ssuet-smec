@@ -1,5 +1,5 @@
-const pool = require('./../../config/database')
-const Qexecution = require('./../../Controllers/query')
+const pool = require('./../config/database')
+const Qexecution = require('./../Controllers/query')
 const crypto = require('crypto');
 
 module.exports= {
