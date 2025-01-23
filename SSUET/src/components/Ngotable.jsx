@@ -25,6 +25,7 @@ const ClothesDonationPage = () => {
     // const [clothesData, setClothesData] = useState([]);
   const [donatedData, setDonatedData] = useState([]);
 //   const [loading, setLoading] = useState(true);
+const [discardedData, setDiscardedData] = useState([]);
     useEffect(() => {
       const fetchClothesData = async () => {
         try {
@@ -149,6 +150,41 @@ const ClothesDonationPage = () => {
     
         fetchDonatedData();
       }, []);
+      useEffect(() => {
+        const fetchDiscardedData = async () => {
+          try {
+            const ngoDetails = Cookies.get("ngoDetails");
+            const selectedBrand = Cookies.get("selectedBrand");
+    
+            if (!ngoDetails || !selectedBrand) {
+              console.error("Missing cookie data for discarded items");
+              return;
+            }
+    
+            const ngoID = JSON.parse(ngoDetails)[0]?.ngoID;
+            const brandId = JSON.parse(selectedBrand)?.brandID;
+    
+            if (!ngoID || !brandId) {
+              console.error("Invalid NGO ID or Brand ID for discarded items");
+              return;
+            }
+    
+            // Fetch discarded clothes data
+            const response = await fetch(`http://localhost:2000/NGO/getDiscarded/${ngoID}/${brandId}`);
+            const result = await response.json();
+    
+            if (result.status === "success") {
+              setDiscardedData(result.data);
+            } else {
+              console.error("Failed to fetch discarded data:", result.message);
+            }
+          } catch (error) {
+            console.error("Error fetching discarded data:", error);
+          }
+        };
+    
+        fetchDiscardedData();
+      }, []);
 
   const [donationPeople, setDonationPeople] = useState([
     "John Smith",
@@ -233,7 +269,6 @@ const ClothesDonationPage = () => {
               <TableRow>
                 {[
                   "Name",
-                  "Picture",
                   "Cloth Name",
                   "Age Group",
                   "Gender",
@@ -259,22 +294,6 @@ const ClothesDonationPage = () => {
     clothesData.map((row) => (
       <TableRow key={row.id}>
         <TableCell>{row.name}</TableCell>
-        <TableCell>
-          {row.picture ? (
-            <img
-              src={row.picture}
-              alt={row.clothName}
-              style={{
-                width: "50px",
-                height: "50px",
-                cursor: "pointer",
-              }}
-              onClick={() => handleImageClick(row.picture)}
-            />
-          ) : (
-            "No Image"
-          )}
-        </TableCell>
         <TableCell>{row.clothName}</TableCell>
         <TableCell>{row.ageGroup}</TableCell>
         <TableCell>{row.gender}</TableCell>
@@ -340,27 +359,6 @@ const ClothesDonationPage = () => {
         </TableContainer>
       </Box>
 
-      {/* Modal for Image Preview */}
-      <Modal open={!!selectedImage} onClose={handleCloseModal}>
-        <Box
-          sx={{
-            position: "absolute",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            backgroundColor: "white",
-            padding: 4,
-            outline: "none",
-            boxShadow: 24,
-          }}
-        >
-          <img
-            src={selectedImage}
-            alt="Preview"
-            style={{ width: "100%", maxHeight: "400px", objectFit: "contain" }}
-          />
-        </Box>
-      </Modal>
 
       {/* Donation Record Table */}
       <Box sx={{ marginBottom: 4 }}>
@@ -421,43 +419,47 @@ const ClothesDonationPage = () => {
 
       {/* Discard Record Table */}
       <Box>
-        <Typography
-          variant="h6"
-          sx={{
-            marginBottom: 2,
-            color: "#2b6777",
-          }}
-        >
-          Discard Records
-        </Typography>
-        <TableContainer component={Paper} sx={{ backgroundColor: "#e0e0e0" }}>
-          <Table sx={{ minWidth: 650 }} aria-label="discard record table">
-            <TableHead sx={{ backgroundColor: "#2b6777" }}>
+      <Typography
+        variant="h6"
+        sx={{
+          marginBottom: 2,
+          color: "#2b6777",
+        }}
+      >
+        Discard Records
+      </Typography>
+      <TableContainer component={Paper} sx={{ backgroundColor: "#e0e0e0" }}>
+        <Table sx={{ minWidth: 650 }} aria-label="discard record table">
+          <TableHead sx={{ backgroundColor: "#2b6777" }}>
+            <TableRow>
+              {["Name", "Cloth Name", "Material", "Suggestion"].map((header) => (
+                <TableCell key={header} sx={{ color: "#ffffff" }}>
+                  {header}
+                </TableCell>
+              ))}
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {discardedData.length > 0 ? (
+              discardedData.map((row) => (
+                <TableRow key={row.discardedID}>
+                  <TableCell>{row.userName}</TableCell>
+                  <TableCell>{row.clothName}</TableCell>
+                  <TableCell>{row.material}</TableCell>
+                  <TableCell>{row.suggestions}</TableCell>
+                </TableRow>
+              ))
+            ) : (
               <TableRow>
-                {["Name", "Cloth Name", "Material", "Suggestion"].map(
-                  (header) => (
-                    <TableCell key={header} sx={{ color: "#ffffff" }}>
-                      {header}
-                    </TableCell>
-                  )
-                )}
+                <TableCell colSpan={4} align="center">
+                  No discarded data available.
+                </TableCell>
               </TableRow>
-            </TableHead>
-            <TableBody>
-              {clothesData
-                .filter((row) => row.action === "Discard" && row.suggestion)
-                .map((row) => (
-                  <TableRow key={row.id}>
-                    <TableCell>{row.name}</TableCell>
-                    <TableCell>{row.clothName}</TableCell>
-                    <TableCell>{row.material}</TableCell>
-                    <TableCell>{row.suggestion}</TableCell>
-                  </TableRow>
-                ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </Box>
+            )}
+          </TableBody>
+        </Table>
+      </TableContainer>
+    </Box>
     </Container>
   );
 };

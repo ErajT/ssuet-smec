@@ -230,7 +230,7 @@ const aiSuggestions = async (clothName, material) => {
             method: "POST",
             headers: {
             //   "Authorization": `${API_KEY}`,
-              "Authorization": `Bearer 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`,            
+              "Authorization": `Bearer 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`,            
               "Content-Type": "application/json"
             },
             body: JSON.stringify({
@@ -242,7 +242,7 @@ const aiSuggestions = async (clothName, material) => {
           });
           
           const Res = await response.json();
-        //   console.log(Res.choices?.[0]?.message?.content);
+          console.log(Res.choices?.[0]?.message?.content);
 
         // Extract the summary content
         const suggestions = Res.choices?.[0]?.message?.content;
@@ -310,7 +310,6 @@ exports.addDonated = async (req, res) => {
 
     try {
         const { donationID, deservingID } = req.body;
-        console.log(donationID, deservingID)
 
         // Fetch the donation details
         const donationDetails = await Qexecution.queryExecute(SelectSQL, [donationID]);
