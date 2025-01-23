@@ -84,10 +84,18 @@ const UserHistory = () => {
                 marginTop: 4,
                 padding: 2,
                 borderRadius: 2,
+                width: "100vw",
                 overflowY: "auto", // Enable vertical scrolling
-                height: "auto", // Adjust height for scrollable area
+                height: "100vh", // Adjust height for scrollable area
             }}
         >
+            <Button
+                variant="contained"
+                onClick={handleSubmit}
+                style={{ marginTop: "20px", marginBottom: "20px", backgroundColor: "#2b6777" }}
+            >
+                Donate More
+            </Button>
             {/* Donation Record Table */}
             <Box sx={{ marginBottom: 4 }}>
                 <Typography
@@ -95,6 +103,8 @@ const UserHistory = () => {
                     sx={{
                         marginBottom: 2,
                         color: "#2b6777", // Primary theme color
+                        height: "auto",
+                        overflowY: "auto"
                     }}
                 >
                     Your Donations
@@ -135,13 +145,6 @@ const UserHistory = () => {
                 </TableContainer>
             </Box>
             {/* Button to navigate to another page */}
-            <Button
-                variant="contained"
-                onClick={handleSubmit}
-                style={{ marginTop: "20px", backgroundColor: "#2b6777" }}
-            >
-                Donate More
-            </Button>
         </Container>
     );
 };
